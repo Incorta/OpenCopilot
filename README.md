@@ -1,9 +1,9 @@
 
 To get started:
-* `pip3 install -r requirements.txt`
+* `cd service && pip3 install -r requirements.txt`
 
 To run it:
-* `python3 -m uvicorn main:app --reload`
+* `cd service && python3 -m uvicorn main:app --reload`
 * Check tests.E2E_tests.scenarios folder for full samples with expected prompts from GPT-4
 
 To run test web chatbot:
@@ -12,9 +12,9 @@ To run test web chatbot:
 * `npm start`
 
 To build meta database:
-* `python3 test_schemas.py`
+* `cd service && python3 test_schemas.py`
 
 To run in Testing mode
 * Set the sessions queries in tests.E2E_tests.scenarios/USED_INCORTA_ENV/queries_list.py
-* `python3 main_testing.py`
+* `cd service && python3 main_testing.py`
 
