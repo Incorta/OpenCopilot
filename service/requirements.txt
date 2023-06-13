@@ -1,0 +1,15 @@
+openai~=0.27.6
+termcolor~=2.3.0
+jinja2~=3.1.2
+pydantic~=1.10.7
+fastapi~=0.95.1
+requests~=2.30.0
+uvicorn~=0.22.0
+utils~=1.0.1
+pytest~=7.3.1
+operators~=1.0.1
+chromadb~=0.3.22
+psycopg_binary~=3.1.9
+psycopg~=3.1.9
+sse-starlette~=1.5.0
+urllib3~=1.26.15

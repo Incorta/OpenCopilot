@@ -1,0 +1,4 @@
+**/env.py
+**/__pycache__/**
+.chromadb_all_schemas_no_columns
+.pytest_cache
