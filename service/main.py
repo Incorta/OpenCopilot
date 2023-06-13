@@ -47,8 +47,9 @@ class Response(BaseModel):
 @app.get("/async_query")
 @app.post("/async_query")
 async def handle_async_query(request: Request):
-    chat_id = request.path_params.get("chat_id")
+    chat_id = request.query_params.get("chat_id")
     query_string = request.query_params.get("query_string")
+
     predefined_obj = {}
     if request.method == "POST":
         # To include a predefined_obj, send it in the post request body
