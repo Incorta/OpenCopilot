@@ -1,0 +1,24 @@
+Given that a data analytics tool has dashboards, which contains tabs, and each tab has insights.
+An insight is identified by its dashboard name, its tab name and the insight name.
+I'll give you the three name, and you tell me what can be the user query string that would trigger this insight in only JSON format.
+
+Notes:
+- Give me the most suitable user query (only one)
+- Give me ONLY ONLY ONLY the json.
+- Don't mention anything related to dashboard, tab or insight.
+- Reply only by the user query.
+
+Example:
+Dashboard Name: Merchant Analytics Dashboard
+Tab Name: iExpense Analytics Merchant
+Insight Name: Top 10 Merchants by Transaction
+
+User_Query:
+{"user_query": "What are the top 10 Merchants by Transaction in iExpense Analytics Merchant?"}
+
+Now Given:
+- Dashboard Name: {{ dashboardName }}
+- Tab Name: {{ layoutName }}
+- Insight Name: {{ insightName }}
+
+User_Query:

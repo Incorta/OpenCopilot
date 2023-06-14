@@ -76,7 +76,6 @@ def get_insight_definition(dashboard_guid, layout_guid, insight_guid, token, jse
         "content-type": "application/json"
     }
     data = "{\"prompts\": [], \"resolveVariables\": true}"
-
     insight_def_url = INCORTA_URL + f"/incorta/bff/v1/dashboards/{dashboard_guid}/layouts/{layout_guid}/insights/{insight_guid}"
     insight_definition = send_request("POST", insight_def_url, None, headers, None, data, jsessionid, "Error while getting insights definitions").text
     return insight_definition

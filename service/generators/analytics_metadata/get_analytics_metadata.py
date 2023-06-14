@@ -76,5 +76,4 @@ def explore_dashboards(token, jsessionid, xsrf_token):
         extract_insights_metadata(dashboard_definition.json(), token, jsessionid, xsrf_token)
 
 
-def save_metadata_df_to_file():
-    metadata_df.to_csv('analytics_metadata_table.csv')
+
