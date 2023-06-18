@@ -9,6 +9,7 @@ from operators.incorta import ui_chart_op
 from operators.incorta import ui_text_op
 from tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
 from utils.exceptions import UnknownCommandError
+from service.operators.incorta.operators_handler import op_functions
 
 
 def execute_sub_task(query_str, tasks, task_index, session_query):
@@ -25,18 +26,8 @@ def execute_sub_task(query_str, tasks, task_index, session_query):
         result = session_query.get_cached_agent_communications(component=task_index, sub_component=constants.Result)
 
     if result is None:
-        if tasks[task_index][constants.Operator] == constants.BusinessViewFinderOp:
-            result = business_view_finder_op.handle_command(command)
-
-        elif tasks[task_index][constants.Operator] == constants.UiChartOp:
-            result = ui_chart_op.handle_command(command)
-
-        elif tasks[task_index][constants.Operator] == constants.UiTextOp:
-            result = ui_text_op.handle_command(command)
-
-        elif tasks[task_index][constants.Operator] == constants.QueryOp:
-            result = query_op.handle_command(command)
-
+        if tasks[task_index][constants.Operator] in op_functions:
+            result = op_functions[tasks[task_index][constants.Operator]]["handle_command"](command)
         else:
             raise UnknownCommandError(f"Unknown command: {command}")
 
