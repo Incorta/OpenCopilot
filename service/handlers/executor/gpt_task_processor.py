@@ -9,23 +9,13 @@ from utils import jinja_utils
 from utils import logger, exceptions
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_3_5, completion_4
-
+from service.operators.incorta.operators_handler import op_functions
 
 def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
     task = tasks[task_index]
 
-    if task[constants.Operator] == constants.BusinessViewFinderOp:
-        commands_help = business_view_finder_op.get_commands_help()
-
-    elif task[constants.Operator] == constants.UiChartOp:
-        commands_help = ui_chart_op.get_commands_help()
-
-    elif task[constants.Operator] == constants.UiTextOp:
-        commands_help = ui_text_op.get_commands_help()
-
-    elif task[constants.Operator] == constants.QueryOp:
-        commands_help = query_op.get_commands_help()
-
+    if task[constants.Operator] in op_functions:
+        commands_help = op_functions[task[constants.Operator]]["get_commands_help"]()
     else:
         raise exceptions.UnknownCommandError(f"Unknown command operator: {task[constants.Operator]}")
 
