@@ -3,6 +3,7 @@ import json
 import utils.logger as logger
 from configs import env, constants
 from handlers.executor import gpt_task_processor
+from operators.incorta.operators_handler import op_functions
 from utils import jinja_utils
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_4
@@ -76,8 +77,7 @@ def plan_level_1(query_str, tasks):
     for i in range(0, len(tasks)):
         task = tasks[i]
 
-        if task[constants.Operator] in [constants.BusinessViewFinderOp, constants.QueryOp, constants.UiChartOp,
-                                        constants.UiTextOp]:  # None of the current operators requires phase 1 planning
+        if task[constants.Operator] in op_functions.keys():  # None of the current operators requires phase 1 planning
             continue
 
         prompt_text = gpt_task_processor.get_command_prompt_from_task(tasks, i, "PLANNER")

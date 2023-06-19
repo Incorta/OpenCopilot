@@ -3,13 +3,9 @@ from configs import env, constants
 from handlers.executor import gpt_task_processor
 from handlers.planner import gpt_planner
 from handlers.predefined_query_handler import validate_predefined_query
-from operators.incorta import business_view_finder_op
-from operators.incorta import query_op
-from operators.incorta import ui_chart_op
-from operators.incorta import ui_text_op
 from tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
 from utils.exceptions import UnknownCommandError
-from service.operators.incorta.operators_handler import op_functions
+from operators.incorta.operators_handler import op_functions
 
 
 def execute_sub_task(query_str, tasks, task_index, session_query):

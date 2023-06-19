@@ -9,7 +9,7 @@ from utils import jinja_utils
 from utils import logger, exceptions
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_3_5, completion_4
-from service.operators.incorta.operators_handler import op_functions
+from operators.incorta.operators_handler import op_functions
 
 def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
     task = tasks[task_index]
@@ -64,14 +64,14 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
         command = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Command)
 
     if command is None:
-        if tasks[task_index]["operator"].lower() == constants.QueryOp.lower() or tasks[task_index]["operator"].lower() == constants.UiTextOp.lower():
-            chat_gpt_response = completion_4.run(
-                messages
-            )
-        else:
-            chat_gpt_response = completion_3_5.run(
-                messages
-            )
+        # if tasks[task_index]["operator"].lower() == constants.QueryOp.lower() or tasks[task_index]["operator"].lower() == constants.UiTextOp.lower():
+        #     chat_gpt_response = completion_4.run(
+        #         messages
+        #     )
+        # else: TODO:: remove from open-copilot branch, and leave in the incorta copilot branch
+        chat_gpt_response = completion_3_5.run(
+            messages
+        )
         command = json.loads(chat_gpt_response)
 
     logger.system_message("Got Command, will execute it:")

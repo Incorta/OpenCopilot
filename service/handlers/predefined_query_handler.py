@@ -44,7 +44,7 @@ def validate_predefined_query(query_object):
 
         task = tasks[task_idx]
         task_operator = task[constants.Operator]
-        operator_module = importlib.import_module(constants.OPERATORS_FILES[task_operator])
+        operator_module = importlib.import_module(module.op_functions[task_operator]["file_name"])
         # Validate that command_name in operator's command is one of the Operators defined commands
         # A naive assertion for tasks equivalence with the plan's tasks
         #  (2 or more sequential tasks of the same operators that aren't in order will pass this even if they shouldn't)
