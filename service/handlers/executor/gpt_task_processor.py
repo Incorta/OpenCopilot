@@ -1,21 +1,20 @@
+import importlib
 import json
 
 from configs import env, constants
-from operators.incorta import business_view_finder_op
-from operators.incorta import query_op
-from operators.incorta import ui_chart_op
-from operators.incorta import ui_text_op
 from utils import jinja_utils
 from utils import logger, exceptions
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_3_5, completion_4
-from operators.incorta.operators_handler import op_functions
+
+module_name = "operators." + env.serviceName + ".operators_handler"
+module = importlib.import_module(module_name)
 
 def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
     task = tasks[task_index]
 
-    if task[constants.Operator] in op_functions:
-        commands_help = op_functions[task[constants.Operator]]["get_commands_help"]()
+    if task[constants.Operator] in module.op_functions:
+        commands_help = module.op_functions[task[constants.Operator]]["get_commands_help"]()
     else:
         raise exceptions.UnknownCommandError(f"Unknown command operator: {task[constants.Operator]}")
 
