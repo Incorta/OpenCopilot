@@ -1,24 +1,28 @@
 Given that a data analytics tool has dashboards, which contains tabs, and each tab has insights.
 An insight is identified by its dashboard name, its tab name and the insight name.
-I'll give you the three name, and you tell me what can be the user query string that would trigger this insight in only JSON format.
+I'll give you the Insight name, conclude the meaning behind it and tell me what can be the user query (from an analyst perspective) that would trigger
+ this insight in only JSON format. I'll also give you the dashboard name and the tab name you may use them (if they add any value to the meaning).
+ The user doesn't know anything about dashboards, tabs or insights.
 
-Notes:
-- Give me the most suitable user query (only one)
-- Give me ONLY ONLY ONLY the json.
-- Don't mention anything related to dashboard, tab or insight.
-- Reply only by the user query.
+Follow the next steps to produce the correct User_Query, given the following example:
+    - Example:
+        Insight Name: Top 10 Profitable Projects (Drill to cost details)
+        Dashboard Name: 1-Project Executive Dashboard
+        Tab Name: Summary
 
-Example:
-Dashboard Name: Merchant Analytics Dashboard
-Tab Name: iExpense Analytics Merchant
-Insight Name: Top 10 Merchants by Transaction
+    1. Generate the most suitable User_Query (only one)
+    2. Convert the Generated User_Query to json format:
+    3. Filter the JSON User_Query, Don't include in it words like: ("Dashboard", "Tab", "Insight", "Summary"),
+    [EVEN IF they exist in the Dashboard Name, Tab Name or Insight Name]
+    4. Rephrase the Filtered User_Query in good meaningful english
+       - Final Correct User_Query:
+            {"user_query": "What are the cost details for the top 10 most profitable projects?"}
 
-User_Query:
-{"user_query": "What are the top 10 Merchants by Transaction in iExpense Analytics Merchant?"}
 
 Now Given:
+- Insight Name: {{ insightName }}
 - Dashboard Name: {{ dashboardName }}
 - Tab Name: {{ layoutName }}
-- Insight Name: {{ insightName }}
 
+Return only the Final Correct User_Query after checking that you applied all the previous steps in order
 User_Query:
