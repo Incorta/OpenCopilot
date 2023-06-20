@@ -2,19 +2,19 @@ import importlib
 import json
 
 from configs import env, constants
+from configs.env import operators_handler_module_name, service_name
 from utils import jinja_utils
 from utils import logger, exceptions
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_3_5, completion_4
 
-module_name = "operators." + env.serviceName + ".operators_handler"
-module = importlib.import_module(module_name)
+operators_handler_module = importlib.import_module(operators_handler_module_name)
 
 def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
     task = tasks[task_index]
 
-    if task[constants.Operator] in module.op_functions:
-        commands_help = module.op_functions[task[constants.Operator]]["get_commands_help"]()
+    if task[constants.Operator] in operators_handler_module.op_functions:
+        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"]()
     else:
         raise exceptions.UnknownCommandError(f"Unknown command operator: {task[constants.Operator]}")
 
@@ -42,7 +42,8 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
         "commands_command1_description": json.dumps([commands_help["commands"][0]["command_description"]], indent=2),
         "commands_command1": json.dumps([commands_help["commands"][0]["command"]], indent=2),
         "tasksLength": tasks_count,
-        "sub_tasks_expectations": sub_tasks_expectations
+        "sub_tasks_expectations": sub_tasks_expectations,
+        "service_name": service_name
     })
 
     return prompt_text

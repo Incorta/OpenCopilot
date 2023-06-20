@@ -2,14 +2,14 @@ import importlib
 
 import utils.logger as logger
 from configs import env, constants
+from configs.env import operators_handler_module_name
 from handlers.executor import gpt_task_processor
 from handlers.planner import gpt_planner
 from handlers.predefined_query_handler import validate_predefined_query
 from tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
 from utils.exceptions import UnknownCommandError
 
-module_name = "operators." + env.serviceName + ".operators_handler"
-module = importlib.import_module(module_name)
+operators_handler_module = importlib.import_module(operators_handler_module_name)
 
 
 def execute_sub_task(query_str, tasks, task_index, session_query):
@@ -26,8 +26,8 @@ def execute_sub_task(query_str, tasks, task_index, session_query):
         result = session_query.get_cached_agent_communications(component=task_index, sub_component=constants.Result)
 
     if result is None:
-        if tasks[task_index][constants.Operator] in module.op_functions:
-            result = module.op_functions[tasks[task_index][constants.Operator]]["handle_command"](command)
+        if tasks[task_index][constants.Operator] in operators_handler_module.op_functions:
+            result = operators_handler_module.op_functions[tasks[task_index][constants.Operator]]["handle_command"](command)
         else:
             raise UnknownCommandError(f"Unknown command: {command}")
 

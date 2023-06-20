@@ -4,13 +4,12 @@ import json
 import utils.logger as logger
 from configs import env, constants
 from handlers.executor import gpt_task_processor
-from configs.env import serviceName
+from configs.env import operators_handler_module_name, service_name
 from utils import jinja_utils
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_4
 
-module_name = "operators." + serviceName + ".operators_handler"
-module = importlib.import_module(module_name)
+operators_handler_module = importlib.import_module(operators_handler_module_name)
 
 def get_next_todo_task_index(tasks_list):
     i = 0
@@ -29,6 +28,14 @@ def summarize_session_queries(user_session):
     } for query in user_session.queries_list]
 
 
+def get_operators_descriptions():
+    operators_descriptions_list = ""
+    for operator in operators_handler_module.op_functions:
+        operators_descriptions_list += ("- " + operators_handler_module.op_functions[operator]["operator_name"] + " --> " + "(" + operator + ") " + operators_handler_module.op_functions[operator]["description"] + "\n")
+
+    return operators_descriptions_list
+
+
 def plan_level_0(user_objective, user_session, session_query):
     planner_messages = []
 
@@ -38,12 +45,14 @@ def plan_level_0(user_objective, user_session, session_query):
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
 
     prompt_text = jinja_utils.load_template(template_path, {
-        "session_summary": session_summary_str
+        "session_summary": session_summary_str,
+        "service_name": service_name,
+        "op_descriptions": get_operators_descriptions()
     })
 
     planner_messages.append({"role": "system", "content": prompt_text})
 
-    planner_messages.append({"role": "user", "content": "From Incorta Operator: The user is asking: " + user_objective})
+    planner_messages.append({"role": "user", "content": f"From {env.service_name} Operator: The user is asking: " + user_objective})
     planner_messages.append({"role": "assistant", "content": "JSON:"})
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=planner_messages)
@@ -80,10 +89,10 @@ def plan_level_1(query_str, tasks):
     for i in range(0, len(tasks)):
         task = tasks[i]
 
-        if task[constants.Operator] in module.op_functions.keys():  # None of the current operators requires phase 1 planning
+        if task[constants.Operator] in operators_handler_module.op_functions:  # None of the current operators requires phase 1 planning
             continue
 
-        prompt_text = gpt_task_processor.get_command_prompt_from_task(tasks, i, "PLANNER")
+        prompt_text = gpt_task_processor.get_command_prompt_from_task(query_str, tasks, i, "PLANNER")
 
         json_str = completion_4.run([
             {"role": "system", "content": prompt_text},
