@@ -50,5 +50,3 @@ def run_sql_query_jdbc(sql_query):
             cursor.execute(sql_query)
             results = cursor.fetchall()
             return results
-            # columns = [desc[0] for desc in cursor.description]
-            # return format_sql_result(results, columns)
