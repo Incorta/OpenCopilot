@@ -1,5 +1,4 @@
 import json
-import os
 import psycopg
 import urllib.parse
 from configs import env
@@ -51,15 +50,3 @@ def run_sql_query_jdbc(sql_query):
             cursor.execute(sql_query)
             results = cursor.fetchall()
             return results
-            # columns = [desc[0] for desc in cursor.description]
-            # return format_sql_result(results, columns)
-
-
-if __name__ == '__main__':
-    os.chdir("../../../")
-
-    sql_query = "SELECT SUM(ANNUALIZED_SALARY) as total_employee_cost, ORGANIZATION_NAME as department " \
-                " FROM WorkforceDeployment.CompensationCostReport " \
-                " GROUP BY ORGANIZATION_NAME;"
-
-    run_sql_query_jdbc(sql_query)
