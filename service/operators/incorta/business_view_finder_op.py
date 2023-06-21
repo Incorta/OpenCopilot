@@ -34,7 +34,7 @@ def handle_command(command):
         return metadata_context_retriever.get_top_relevant_view(1, command["args"]["query"])
 
     elif command["command_name"] == Commands.ListRelevantViews.name:
-        return metadata_context_retriever.get_top_relevant_schemas(5, command["args"]["query"])
+        return metadata_context_retriever.get_top_relevant_schemas_results(5, command["args"]["query"])
 
     elif command["command_name"] == Commands.ListRelevantColumnsInViews.name:
         return schemas.get_schema_views(command["args"]["schema_name"])
