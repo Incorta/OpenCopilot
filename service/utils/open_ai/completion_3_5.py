@@ -65,7 +65,12 @@ def run(messages, parse_as_json=True):
             logger.error(f"ChatGPT Model is busy, retrying again in {backoff_time} seconds")
             time.sleep(backoff_time)  # Wait for 2 seconds
 
+        except openai.error.Timeout:
+            logger.error(f"Failed to get response from ChatGPT, retrying again in {backoff_time} seconds")
+            time.sleep(backoff_time)  # Wait for 2 seconds
+
         except Exception as e:  # If any other exception is thrown
+            print(f"Error class: {e.__class__.__name__}")
             raise APIFailureException(f"ChatGPT error occurred: {e}")
 
     if "choices" in response:
