@@ -7,13 +7,13 @@ FROM node:16
 WORKDIR /app
 
 # Copy the package.json file
-COPY ../../chat-fe/package.json .
+COPY ./chat-fe/package.json .
 
 # Install the Node.js dependencies
 RUN npm install --legacy-peer-deps
 
 # Copy the rest of the code
-COPY ../../chat-fe .
+COPY ./chat-fe .
 
 # Set the command to start the app
 CMD ["npm", "start"]

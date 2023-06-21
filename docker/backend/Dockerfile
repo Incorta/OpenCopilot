@@ -7,13 +7,14 @@ FROM python:3.9
 WORKDIR /app
 
 # Copy the requirements file
-COPY ./service/* ./
+COPY ./service/requirements.txt ./
 
 # Install the Python dependencies
 RUN pip3 install -r requirements.txt
 
-# Set the PYTHONPATH (Important to allow relative path imports)
-#CMD ["sh", "-c", "PYTHONPATH=$(pwd) uvicorn main:app --host 0.0.0.0 --port 8000"]
+# Copy the rest of files
+COPY ./service/ ./
 
-CMD ["/bin/bash", "-c", "exec /bin/bash"]
+# Run the server (Set the PYTHONPATH (Important to allow relative path imports))
+CMD ["sh", "-c", "PYTHONPATH=$(pwd) uvicorn main:app --host 0.0.0.0 --port 8000"]
 
