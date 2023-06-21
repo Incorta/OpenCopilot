@@ -7,7 +7,7 @@ from configs import env
 
 class CachedSessionsStoreHandler:
     _instance = None
-    _sessions_store_filename = f"tests/E2E_tests/{env.used_incorta_env}/sessions_store"
+    _sessions_store_filename = f"tests/E2E_tests/{env.test_env}/sessions_store.json"
     _sessions_dict = {}
     _cached_session_idx = 0
 
@@ -18,15 +18,16 @@ class CachedSessionsStoreHandler:
         return cls._instance
 
     def initialize_cached_sessions_store(self):
-        if not os.path.exists(self._sessions_store_filename + '.json'):
+        if not os.path.exists(self._sessions_store_filename):
             self.create_new_cached_sessions_store()
 
-        with open(self._sessions_store_filename + ".json") as f:
+        with open(self._sessions_store_filename) as f:
             self._sessions_dict = json.load(f)
 
     def create_new_cached_sessions_store(self):
         data = {}
-        with open(self._sessions_store_filename + ".json", 'w') as f:
+        os.makedirs(os.path.dirname(self._sessions_store_filename), exist_ok=True)
+        with open(self._sessions_store_filename, 'w') as f:
             json.dump(data, f)
 
     def validate_session_history_match(self, candidate_session, session, query_idx_match):
@@ -83,6 +84,6 @@ class CachedSessionsStoreHandler:
         """Adds a new query object to a JSON file containing a dictionary of sessions
         and their corresponding list of query objects."""
         self.append_or_overwrite_session_to_store(new_session_queries)
-        with open(self._sessions_store_filename + ".json", 'w') as f:
+        with open(self._sessions_store_filename, 'w') as f:
             data = json.dumps(self._sessions_dict, indent=2)
             f.write(data)
