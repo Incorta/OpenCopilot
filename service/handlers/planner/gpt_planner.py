@@ -4,7 +4,7 @@ import json
 import utils.logger as logger
 from configs import env, constants
 from handlers.executor import gpt_task_processor
-from configs.env import operators_path, service_name
+from configs.env import operators_path, operators_group
 from utils import jinja_utils
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_4
@@ -46,18 +46,18 @@ def plan_level_0(user_objective, user_session, session_query):
 
     prompt_text = jinja_utils.load_template(template_path, {
         "session_summary": session_summary_str,
-        "service_name": service_name,
+        "service_name": operators_group,
         "op_descriptions": get_operators_descriptions()
     })
 
     planner_messages.append({"role": "system", "content": prompt_text})
 
-    planner_messages.append({"role": "user", "content": f"From {env.service_name} Operator: The user is asking: " + user_objective})
+    planner_messages.append({"role": "user", "content": f"From {env.operators_group} Operator: The user is asking: " + user_objective})
     planner_messages.append({"role": "assistant", "content": "JSON:"})
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=planner_messages)
 
-    """ If get_plan_response is enabled, retrieve plan0_response from sessions store instead of requesting it from GPT"""
+    """If get_plan_response is enabled, retrieve plan0_response from sessions store instead of requesting it from GPT"""
     matching_level0_plan_gpt4 = None
     if env.sessions_getting_mode and (env.get_all or env.get_plan_response):
         matching_level0_plan_gpt4 = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response)

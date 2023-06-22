@@ -1,9 +1,9 @@
-from operators.postgres import query_op, metadata_o, ui_text_op
+from operators.postgres import query_op, metadata_op, ui_text_op
 
 op_functions = {
     "MetaDataOp": {
-        "get_commands_help": metadata_o.get_commands_help,
-        "handle_command": lambda command: metadata_o.handle_command(command),
+        "get_commands_help": metadata_op.get_commands_help,
+        "handle_command": lambda command: metadata_op.handle_command(command),
         "file_name": "metadata_op",
         "description": "All queries must be against a single table, this operator can help you find the most relevant table.",
         "operator_name": "SQL Metadata Helper"

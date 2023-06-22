@@ -12,7 +12,7 @@ To run test web chatbot:
 * `npm start`
 
 To build meta database:
-* `cd service && python3 test_schemas.py`
+* `cd service && python3 initialize_chromaDB.py`
 
 To run in Testing mode
 * Set the sessions queries in tests.E2E_tests.scenarios/USED_INCORTA_ENV/queries_list.py
