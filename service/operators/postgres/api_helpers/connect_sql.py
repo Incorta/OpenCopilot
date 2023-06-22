@@ -38,4 +38,15 @@ def run_sql_query(sql_query):
         with conn.cursor() as cursor:
             cursor.execute(sql_query)
             results = cursor.fetchall()
+            results = list(results)
+
+            for i in range(len(results)):
+                results[i] = list(results[i])
+                for j in range(len(results[i])):
+                    if type(results[i][j]) is datetime.datetime:
+                        date_string = results[i][j].strftime("%Y-%m-%d %H:%M:%S")
+                        results[i][j] = date_string
+
+                results[i] = tuple(results[i])
+
             return results
