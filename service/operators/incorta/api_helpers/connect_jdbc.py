@@ -52,13 +52,3 @@ def run_sql_query_jdbc(sql_query):
             return results
             # columns = [desc[0] for desc in cursor.description]
             # return format_sql_result(results, columns)
-
-
-if __name__ == '__main__':
-    # os.chdir("../../../")
-
-    sql_query = "SELECT SUM(ANNUALIZED_SALARY) as total_employee_cost, ORGANIZATION_NAME as department " \
-                " FROM WorkforceDeployment.CompensationCostReport " \
-                " GROUP BY ORGANIZATION_NAME;"
-
-    run_sql_query_jdbc(sql_query)

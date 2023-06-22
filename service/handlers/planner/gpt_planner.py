@@ -4,12 +4,12 @@ import json
 import utils.logger as logger
 from configs import env, constants
 from handlers.executor import gpt_task_processor
-from configs.env import operators_handler_module_name, service_name
+from configs.env import operators_path, service_name
 from utils import jinja_utils
 from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_4
 
-operators_handler_module = importlib.import_module(operators_handler_module_name)
+operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
 def get_next_todo_task_index(tasks_list):
     i = 0

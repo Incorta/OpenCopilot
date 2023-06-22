@@ -3,9 +3,9 @@ from collections import namedtuple
 
 from configs import constants
 from utils import logger
-from configs.env import operators_handler_module_name
+from configs.env import operators_path
 
-operators_handler_module = importlib.import_module(operators_handler_module_name)
+operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 UserQuery = namedtuple("UserQuery", ["user_query_str", "predefined_agent_communication"])
 
 

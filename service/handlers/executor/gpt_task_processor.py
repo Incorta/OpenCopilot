@@ -2,13 +2,13 @@ import importlib
 import json
 
 from configs import env, constants
-from configs.env import operators_handler_module_name, service_name
+from configs.env import operators_path, service_name
 from utils import jinja_utils
 from utils import logger, exceptions
 from utils.exceptions import UnknownCommandError
-from utils.open_ai import completion_3_5, completion_4
+from utils.open_ai import completion_3_5
 
-operators_handler_module = importlib.import_module(operators_handler_module_name)
+operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
 def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
     task = tasks[task_index]
@@ -64,11 +64,6 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
         command = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Command)
 
     if command is None:
-        # if tasks[task_index]["operator"].lower() == constants.QueryOp.lower() or tasks[task_index]["operator"].lower() == constants.UiTextOp.lower():
-        #     chat_gpt_response = completion_4.run(
-        #         messages
-        #     )
-        # else: TODO:: remove from open-copilot branch, and leave in the incorta copilot branch
         chat_gpt_response = completion_3_5.run(
             messages
         )
