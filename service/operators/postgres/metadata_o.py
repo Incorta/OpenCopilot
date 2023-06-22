@@ -14,7 +14,7 @@ class Commands(Enum):
 
 def get_commands_help():
     return {
-        "overview": "I'm TableFinderOp, I can get you the table and columns that's most relevant to the user query.",
+        "overview": "I'm MetaDataOp, I can get you the table and columns that's most relevant to the user query.",
         "commands": [
             {
                 "command": {
