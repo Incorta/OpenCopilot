@@ -4,10 +4,10 @@ import openai
 import time
 
 from configs.env import openai_gpt4_api_key, openai_gpt4_api_base, openai_gpt4_api_type, openai_gpt4_api_version, \
-    openai_gpt4_api_engine
+    openai_gpt4_api_engine, use_chatgpt_4
 from configs.env import use_human_for_chatgpt_4
 
-from utils.open_ai import common
+from utils.open_ai import common, completion_3_5
 import utils.logger as logger
 from utils.exceptions import APIFailureException
 
@@ -33,6 +33,8 @@ def extract_json_block(text):
 def run(messages, parse_as_json=True):
     # Send the prompt to the OpenAI API using gpt-4
     response = None
+    if not use_chatgpt_4:
+        return completion_3_5.run(messages, parse_as_json=True)
 
     if openai_gpt4_api_type == "azure":
         openai.api_type = "azure"

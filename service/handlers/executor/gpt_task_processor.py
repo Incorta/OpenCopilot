@@ -2,7 +2,7 @@ import importlib
 import json
 
 from configs import env, constants
-from configs.env import operators_path, service_name
+from configs.env import operators_path, operators_group
 from utils import jinja_utils
 from utils import logger, exceptions
 from utils.exceptions import UnknownCommandError
@@ -43,7 +43,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
         "commands_command1": json.dumps([commands_help["commands"][0]["command"]], indent=2),
         "tasksLength": tasks_count,
         "sub_tasks_expectations": sub_tasks_expectations,
-        "service_name": service_name
+        "service_name": operators_group
     })
 
     return prompt_text

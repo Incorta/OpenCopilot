@@ -31,10 +31,10 @@ def get_commands_help():
 
 def handle_command(command):
     if command["command_name"] == Commands.GetRelevantTable.name:
-        return metadata_context_retriever.get_top_relevant_table(1, command["args"]["query"])
+        return metadata_context_retriever.get_top_relevant_tables(1, command["args"]["query"])
 
     elif command["command_name"] == Commands.ListRelevantTables.name:
-        return metadata_context_retriever.get_top_relevant_table(5, command["args"]["query"])
+        return metadata_context_retriever.get_top_relevant_tables(5, command["args"]["query"])
 
     elif command["command_name"] == Commands.ListRelevantColumnsInTables.name:
         return schemas.get_schema_tables(command["args"]["schema_name"])
