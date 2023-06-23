@@ -1,7 +1,7 @@
 import utils.logger as logger
 
-def getChatGPTHumanInput(messages):
 
+def get_gpt_human_input(messages):
     logger.system_message("Ask ChatGPT 4, using the following text:")
     logger.print_gpt_messages(messages)
 
@@ -10,8 +10,8 @@ def getChatGPTHumanInput(messages):
     res = ""
     while True:
         line = input()
-        if line.strip() == "END": # you can use any specific terminator string
+        if line.strip() == "END":  # you can use any specific terminator string
             break
         res += "\n" + line
-    
+
     return res

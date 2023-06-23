@@ -1,5 +1,4 @@
 import importlib
-
 import utils.logger as logger
 from configs import env, constants
 from configs.env import operators_path
@@ -20,7 +19,7 @@ def execute_sub_task(query_str, tasks, task_index, session_query):
 
     session_query.set_pending_agent_communications(component=task_index, sub_component=constants.Command, value=command)
 
-    """ If get_op_result is enabled, retrieve operator's result from sessions store instead of handling it """
+    """ If get_op_result is enabled, retrieve operator's result from sessions_store instead of handling it """
     result = None
     if env.sessions_getting_mode and (env.get_all or env.get_op_result):
         result = session_query.get_cached_agent_communications(component=task_index, sub_component=constants.Result)
@@ -84,7 +83,7 @@ def run_planning_loop(user_query_obj, session):
 
     cached_object = CachedSessionsStoreHandler().get_query_if_exists(user_query_msg, len(session.queries_list), session)
     if predefined_query is None and env.sessions_getting_mode:
-        """ If getting mode is enabled, get the query from the sessions_store, set the _cached_session_idx and use the cached object"""
+        """ If getting mode is enabled, get the query from the sessions_store, set the _cached_session_idx and use the cached object """
         predefined_query = cached_object
 
     if predefined_query is not None:
