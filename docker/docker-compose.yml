@@ -11,6 +11,8 @@ services:
     volumes:
       - ./database/data/invoices.sql:/docker-entrypoint-initdb.d/invoices.sql
       - ./database/data/invoices.csv:/var/lib/mysql-files/invoices.csv
+    ports:
+      - "5432:5432"
   backend:
     build:
       context: ../

@@ -1,5 +1,4 @@
 from enum import Enum
-
 from utils.exceptions import UnknownCommandError
 
 

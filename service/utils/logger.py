@@ -1,5 +1,4 @@
 import json
-
 from termcolor import colored
 
 COLOR_BLACK = "black"
@@ -56,8 +55,8 @@ def print_colored(message, color):
     print(colored(message, color))
 
 
-def print_tasks(tasksJsonArray):
-    for task in tasksJsonArray:
+def print_tasks(tasks_json_array):
+    for task in tasks_json_array:
         color = COLOR_YELLOW if task["status"] == "TODO" else COLOR_GREEN
         print_colored(json.dumps(task, indent=4), color)
 

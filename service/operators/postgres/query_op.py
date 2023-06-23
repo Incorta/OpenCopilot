@@ -1,5 +1,4 @@
 from enum import Enum
-
 from operators.postgres.api_helpers import connect_sql
 from utils.exceptions import UnknownCommandError
 
@@ -31,6 +30,6 @@ def get_commands_help():
 
 def handle_command(command):
     if command["command_name"] == Commands.getQuery.name:
-        return connect_sql.run_sql_query(command["args"]["query"])
+        return connect_sql.get_query_result(command["args"]["query"])
     else:
         raise UnknownCommandError(f"Unknown command: {command['command_name']}")

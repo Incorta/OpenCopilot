@@ -1,6 +1,5 @@
 import importlib
 import json
-
 import utils.logger as logger
 from configs import env, constants
 from handlers.executor import gpt_task_processor
@@ -10,6 +9,7 @@ from utils.exceptions import UnknownCommandError
 from utils.open_ai import completion_4
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
+
 
 def get_next_todo_task_index(tasks_list):
     i = 0
@@ -29,11 +29,13 @@ def summarize_session_queries(user_session):
 
 
 def get_operators_descriptions():
-    operators_descriptions_list = ""
+    operators_descriptions_str = ""
     for operator in operators_handler_module.op_functions:
-        operators_descriptions_list += ("- " + operators_handler_module.op_functions[operator]["operator_name"] + " --> " + "(" + operator + ") " + operators_handler_module.op_functions[operator]["description"] + "\n")
+        operators_descriptions_str += (
+                    "- " + operators_handler_module.op_functions[operator]["operator_name"] + " --> "
+                    + "(" + operator + ") " + operators_handler_module.op_functions[operator]["description"] + "\n")
 
-    return operators_descriptions_list
+    return operators_descriptions_str
 
 
 def plan_level_0(user_objective, user_session, session_query):
@@ -57,7 +59,7 @@ def plan_level_0(user_objective, user_session, session_query):
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=planner_messages)
 
-    """If get_plan_response is enabled, retrieve plan0_response from sessions store instead of requesting it from GPT"""
+    """ If get_plan_response is enabled, retrieve plan0_response from sessions_store instead of requesting it from GPT """
     matching_level0_plan_gpt4 = None
     if env.sessions_getting_mode and (env.get_all or env.get_plan_response):
         matching_level0_plan_gpt4 = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response)
@@ -69,7 +71,6 @@ def plan_level_0(user_objective, user_session, session_query):
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=planned_tasks)
 
-    tasks = []
     if constants.session_query_tasks in planned_tasks:
         tasks = planned_tasks[constants.session_query_tasks]
 

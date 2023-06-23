@@ -1,15 +1,10 @@
 from enum import Enum
-
-from operators.postgres.api_common import schemas
 from operators.postgres.memory import metadata_context_retriever
 from utils.exceptions import UnknownCommandError
 
 
 class Commands(Enum):
     GetRelevantTable = "GetRelevantTable"
-    ListRelevantTables = "ListRelevantTables"
-    ListRelevantColumnsInTables = "ListRelevantColumnsInTables"
-    SelectMostRelevantTable = "SelectMostRelevantTable"
 
 
 def get_commands_help():
@@ -32,15 +27,5 @@ def get_commands_help():
 def handle_command(command):
     if command["command_name"] == Commands.GetRelevantTable.name:
         return metadata_context_retriever.get_top_relevant_tables(1, command["args"]["query"])
-
-    elif command["command_name"] == Commands.ListRelevantTables.name:
-        return metadata_context_retriever.get_top_relevant_tables(5, command["args"]["query"])
-
-    elif command["command_name"] == Commands.ListRelevantColumnsInTables.name:
-        return schemas.get_schema_tables(command["args"]["schema_name"])
-
-    elif command["command_name"] == Commands.SelectMostRelevantTable.name:
-        return schemas.get_table_columns(command["args"]["schema_name"], command["args"]["table_name"])
-
     else:
         raise UnknownCommandError(f"Unknown command: {command['command_name']}")

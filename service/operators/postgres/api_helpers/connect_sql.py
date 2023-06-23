@@ -1,26 +1,33 @@
-import json
-import psycopg
-import urllib.parse
 from configs import env
 import datetime
+import psycopg2
 
 
-def get_db_args():
-    return env.db_name, env.db_user, env.db_password, env.db_host
+class Database:
+    def __init__(self):
+        self.dbname = env.db_name
+        self.user = env.db_user
+        self.password = env.db_password
+        self.host = env.db_host
+        self.port = env.db_port
 
+    def get_connection(self):
+        conn = psycopg2.connect(
+            dbname=self.dbname,
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port
+        )
+        return conn
 
-def format_sql_result(results, columns):
-    records = []
-    for row in results:
-        record = {}
-        for i, value in enumerate(row):
-            # Check if value is a datetime object
-            if isinstance(value, datetime.datetime):
-                value = value.strftime('%Y-%m-%d %H:%M:%S')  # Convert to string
-            record[columns[i]] = value  # Map column name to value
-        records.append(record)
-
-    return json.dumps(records)
+    def execute_query(self, query):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
+        return rows
 
 
 def handle_postgres_datetime(query_results):
@@ -34,15 +41,8 @@ def handle_postgres_datetime(query_results):
     return query_results
 
 
-def run_sql_query(sql_query):
-    db_name, db_user, db_password, db_host = get_db_args()
-    encoded_password = urllib.parse.quote(db_password)
-
-    postgres_url = f"postgresql://{db_user}:{encoded_password}@{db_host}/{db_name}"
-    with psycopg.connect(postgres_url) as conn:
-        # Open a cursor to perform database operations
-        with conn.cursor() as cursor:
-            cursor.execute(sql_query)
-            results = cursor.fetchall()
-            results = handle_postgres_datetime(list(results))
-            return results
+def get_query_result(sql_query):
+    db_object = Database()
+    result = db_object.execute_query(sql_query)
+    formatted_result = handle_postgres_datetime(list(result))
+    return formatted_result

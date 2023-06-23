@@ -3,11 +3,9 @@ from chromadb.config import Settings
 import json
 import time
 from chromadb.utils import embedding_functions
-
 from operators.postgres.api_common.schemas import get_table_columns
 from utils import logger
 from operators.postgres.api_common import schemas
-from utils.open_ai import completion_3_5
 from utils import network
 from configs.env import openai_text_ada_api_key, enable_ad_hoc_views_indexing
 

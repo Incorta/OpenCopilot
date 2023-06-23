@@ -1,6 +1,5 @@
 import importlib
 from collections import namedtuple
-
 from configs import constants
 from utils import logger
 from configs.env import operators_path
