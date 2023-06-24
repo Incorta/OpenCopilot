@@ -60,7 +60,6 @@ async def handle_async_query(request: Request):
     session = session_handler.get_or_create_session(chat_id)
 
     async def generate_events():
-        last_tasks_update = None
         last_session_query = None
         async for result in receive_and_route_user_request.async_run_planning_loop(user_query_obj, session):
             yield {"data": json.dumps(result[constants.session_query_tasks], indent=2)}

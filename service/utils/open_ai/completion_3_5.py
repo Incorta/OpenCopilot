@@ -1,8 +1,6 @@
 import json
-
 import openai
-from configs.env import openai_gpt35_api_key, openai_gpt35_api_base, openai_gpt35_api_type, openai_gpt35_api_version, \
-    openai_gpt35_api_engine
+from configs.env import openai_gpt35_api_key, openai_gpt35_api_base, openai_gpt35_api_type, openai_gpt35_api_version, openai_gpt35_api_engine
 import utils.logger as logger
 from utils.exceptions import APIFailureException
 import time
@@ -65,7 +63,12 @@ def run(messages, parse_as_json=True):
             logger.error(f"ChatGPT Model is busy, retrying again in {backoff_time} seconds")
             time.sleep(backoff_time)  # Wait for 2 seconds
 
+        except openai.error.Timeout:
+            logger.error(f"Failed to get response from OpenAI, retrying again in {backoff_time} seconds")
+            time.sleep(backoff_time)  # Wait for 2 seconds
+
         except Exception as e:  # If any other exception is thrown
+            print(f"Error class: {e.__class__.__name__}")
             raise APIFailureException(f"ChatGPT error occurred: {e}")
 
     if "choices" in response:

@@ -1,14 +1,14 @@
+import importlib
 import utils.logger as logger
 from configs import env, constants
+from configs.env import operators_path
 from handlers.executor import gpt_task_processor
 from handlers.planner import gpt_planner
 from handlers.predefined_query_handler import validate_predefined_query
-from operators.incorta import business_view_finder_op
-from operators.incorta import query_op
-from operators.incorta import ui_chart_op
-from operators.incorta import ui_text_op
 from tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
 from utils.exceptions import UnknownCommandError
+
+operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
 
 def execute_sub_task(query_str, tasks, task_index, session_query):
@@ -19,24 +19,14 @@ def execute_sub_task(query_str, tasks, task_index, session_query):
 
     session_query.set_pending_agent_communications(component=task_index, sub_component=constants.Command, value=command)
 
-    """ If get_op_result is enabled, retrieve operator's result from sessions store instead of handling it """
+    """ If get_op_result is enabled, retrieve operator's result from sessions_store instead of handling it """
     result = None
     if env.sessions_getting_mode and (env.get_all or env.get_op_result):
         result = session_query.get_cached_agent_communications(component=task_index, sub_component=constants.Result)
 
     if result is None:
-        if tasks[task_index][constants.Operator] == constants.BusinessViewFinderOp:
-            result = business_view_finder_op.handle_command(command)
-
-        elif tasks[task_index][constants.Operator] == constants.UiChartOp:
-            result = ui_chart_op.handle_command(command)
-
-        elif tasks[task_index][constants.Operator] == constants.UiTextOp:
-            result = ui_text_op.handle_command(command)
-
-        elif tasks[task_index][constants.Operator] == constants.QueryOp:
-            result = query_op.handle_command(command)
-
+        if tasks[task_index][constants.Operator] in operators_handler_module.op_functions:
+            result = operators_handler_module.op_functions[tasks[task_index][constants.Operator]]["handle_command"](command)
         else:
             raise UnknownCommandError(f"Unknown command: {command}")
 
@@ -93,7 +83,7 @@ def run_planning_loop(user_query_obj, session):
 
     cached_object = CachedSessionsStoreHandler().get_query_if_exists(user_query_msg, len(session.queries_list), session)
     if predefined_query is None and env.sessions_getting_mode:
-        """ If getting mode is enabled, get the query from the sessions_store, set the _cached_session_idx and use the cached object"""
+        """ If getting mode is enabled, get the query from the sessions_store, set the _cached_session_idx and use the cached object """
         predefined_query = cached_object
 
     if predefined_query is not None:

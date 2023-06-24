@@ -1,31 +1,21 @@
+import importlib
 import json
-
 from configs import env, constants
-from operators.incorta import business_view_finder_op
-from operators.incorta import query_op
-from operators.incorta import ui_chart_op
-from operators.incorta import ui_text_op
+from configs.env import operators_path, operators_group
 from utils import jinja_utils
 from utils import logger, exceptions
 from utils.exceptions import UnknownCommandError
-from utils.open_ai import completion_3_5, completion_4
+from utils.open_ai import completion_3_5
+
+operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
 
 def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
     task = tasks[task_index]
 
-    if task[constants.Operator] == constants.BusinessViewFinderOp:
-        commands_help = business_view_finder_op.get_commands_help()
-
-    elif task[constants.Operator] == constants.UiChartOp:
-        commands_help = ui_chart_op.get_commands_help()
-
-    elif task[constants.Operator] == constants.UiTextOp:
-        commands_help = ui_text_op.get_commands_help()
-
-    elif task[constants.Operator] == constants.QueryOp:
-        commands_help = query_op.get_commands_help()
-
+    # Check that the task's operator exists in the operators' group op_functions and get its command help
+    if task[constants.Operator] in operators_handler_module.op_functions:
+        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"]()
     else:
         raise exceptions.UnknownCommandError(f"Unknown command operator: {task[constants.Operator]}")
 
@@ -53,7 +43,8 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
         "commands_command1_description": json.dumps([commands_help["commands"][0]["command_description"]], indent=2),
         "commands_command1": json.dumps([commands_help["commands"][0]["command"]], indent=2),
         "tasksLength": tasks_count,
-        "sub_tasks_expectations": sub_tasks_expectations
+        "sub_tasks_expectations": sub_tasks_expectations,
+        "service_name": operators_group
     })
 
     return prompt_text
@@ -68,20 +59,15 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
 
     session_entry.set_pending_agent_communications(component=task_index, sub_component="request", value=messages)
 
-    """ If get_op_command is enabled, retrieve operator's command from threads_suite instead of requesting it from GPT"""
+    """ If get_op_command is enabled, retrieve operator's command from sessions_store instead of requesting it from GPT """
     command = None
     if env.sessions_getting_mode and (env.get_all or env.get_op_command):
         command = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Command)
 
     if command is None:
-        if tasks[task_index]["operator"].lower() == constants.QueryOp.lower() or tasks[task_index]["operator"].lower() == constants.UiTextOp.lower():
-            chat_gpt_response = completion_4.run(
-                messages
-            )
-        else:
-            chat_gpt_response = completion_3_5.run(
-                messages
-            )
+        chat_gpt_response = completion_3_5.run(
+            messages
+        )
         command = json.loads(chat_gpt_response)
 
     logger.system_message("Got Command, will execute it:")
@@ -103,7 +89,7 @@ def enhance_and_finalize_task_result(command, task, task_index, session_entry):
     messages = [{"role": "system", "content": prompt_text}]
     logger.print_gpt_messages(messages)
 
-    """ If get_op_enhanced_result is enabled, retrieve operator's enhanced_result from threads_suite instead of requesting it from GPT """
+    """ If get_op_enhanced_result is enabled, retrieve operator's enhanced_result from sessions_store instead of requesting it from GPT """
     chat_gpt_response = None
     if env.sessions_getting_mode and (env.get_all or env.get_op_enhanced_result):
         chat_gpt_response = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.EnhancedResult)
