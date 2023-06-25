@@ -7,7 +7,7 @@ FROM python:3.9
 WORKDIR /app
 
 # Copy the requirements file
-COPY ../../service/requirements.txt ./
+COPY ./service/requirements.txt ./
 
 # Install the Python dependencies
 RUN pip3 install -r requirements.txt

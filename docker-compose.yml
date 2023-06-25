@@ -1,0 +1,33 @@
+# docker/docker-compose.yml
+
+version: '3'
+services:
+  database:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: ecommerce
+    volumes:
+      - ./database/data/invoices.sql:/docker-entrypoint-initdb.d/invoices.sql
+      - ./database/data/invoices.csv:/var/lib/mysql-files/invoices.csv
+    ports:
+      - "5432:5432"
+  backend:
+    build:
+      context: ../
+      dockerfile: ./docker/backend/Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+  frontend:
+    build:
+      context: ../
+      dockerfile: ./docker/frontend/Dockerfile
+    environment:
+      REACT_APP_BACKEND_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
