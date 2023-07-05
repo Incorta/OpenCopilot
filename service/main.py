@@ -6,10 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from configs import constants
-from handlers import receive_and_route_user_request
-from handlers import session_handler
-from handlers.predefined_query_handler import create_user_query_tuple
+from sdk.configs import constants
+from controller import receive_and_route_user_request
+from controller import session_handler
+from controller.predefined_query_handler import create_user_query_tuple
 
 app = FastAPI()
 
