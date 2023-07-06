@@ -3,7 +3,7 @@ from jinja2 import Environment, FileSystemLoader
 
 def load_template(path, data):
     # Set up the jinja2 environment to load templates from the current directory
-    env = Environment(loader=FileSystemLoader('.'))
+    env = Environment(loader=FileSystemLoader('../sdk'))
 
     # Load the template from the file
     template = env.get_template(path)
