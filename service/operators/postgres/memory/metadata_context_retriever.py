@@ -4,10 +4,10 @@ import json
 import time
 from chromadb.utils import embedding_functions
 from operators.postgres.api_common.schemas import get_table_columns
-from utils import logger
+from opencopilot.utils import logger
 from operators.postgres.api_common import schemas
-from utils import network
-from configs.env import openai_text_ada_api_key, enable_ad_hoc_views_indexing
+from opencopilot.utils import network
+from opencopilot.configs.env import openai_text_ada_api_key, enable_ad_hoc_views_indexing
 
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
     api_key=openai_text_ada_api_key,

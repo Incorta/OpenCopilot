@@ -1,11 +1,11 @@
 import importlib
 import json
-from configs import env, constants
-from configs.env import operators_path, operators_group
-from utils import jinja_utils
-from utils import logger, exceptions
-from utils.exceptions import UnknownCommandError
-from utils.open_ai import completion_3_5
+from opencopilot.configs import env, constants
+from opencopilot.configs.env import operators_path
+from opencopilot.utils import jinja_utils
+from opencopilot.utils import logger, exceptions
+from opencopilot.utils.exceptions import UnknownCommandError
+from opencopilot.utils.open_ai import completion_3_5, completion_4
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
@@ -44,7 +44,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
         "commands_command1": json.dumps([commands_help["commands"][0]["command"]], indent=2),
         "tasksLength": tasks_count,
         "sub_tasks_expectations": sub_tasks_expectations,
-        "service_name": operators_group
+        "service_name": operators_handler_module.group_name
     })
 
     return prompt_text
@@ -53,7 +53,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
 def get_command_from_task(query_str, tasks, task_index, session_entry):
     prompt_text = get_command_prompt_from_task(query_str, tasks, task_index, "EXECUTOR")
 
-    logger.system_message("Calling ChatGPT 3.5, to create command from task description")
+    logger.system_message("Creating command from task description")
     messages = [{"role": "system", "content": prompt_text}]
     logger.print_gpt_messages(messages)
 
@@ -64,10 +64,18 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     if env.sessions_getting_mode and (env.get_all or env.get_op_command):
         command = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Command)
 
+    preferred_LLM = operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"]
     if command is None:
-        chat_gpt_response = completion_3_5.run(
-            messages
-        )
+        if preferred_LLM == "GPT-4":
+            logger.system_message("Calling ChatGPT {preferred_LLM}:")
+            chat_gpt_response = completion_4.run(
+                    messages
+                )
+        else:
+            logger.system_message("Calling ChatGPT GPT-3.5:")
+            chat_gpt_response = completion_3_5.run(
+                messages
+            )
         command = json.loads(chat_gpt_response)
 
     logger.system_message("Got Command, will execute it:")

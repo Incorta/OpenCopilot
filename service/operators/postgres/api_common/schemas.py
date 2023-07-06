@@ -1,5 +1,5 @@
 from operators.postgres.api_helpers.connect_sql import Database
-from utils import logger
+from opencopilot.utils import logger
 
 db_object = Database()
 

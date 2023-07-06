@@ -1,8 +1,8 @@
 import json
 import openai
-from configs.env import openai_gpt35_api_key, openai_gpt35_api_base, openai_gpt35_api_type, openai_gpt35_api_version, openai_gpt35_api_engine
-import utils.logger as logger
-from utils.exceptions import APIFailureException
+from opencopilot.configs.env import openai_gpt35_api_key, openai_gpt35_api_base, openai_gpt35_api_type, openai_gpt35_api_version, openai_gpt35_api_engine
+import opencopilot.utils.logger as logger
+from opencopilot.utils.exceptions import APIFailureException
 import time
 
 
@@ -53,7 +53,7 @@ def run(messages, parse_as_json=True):
                     model="gpt-3.5-turbo",
                     temperature=0.2,
                     messages=messages,
-                    request_timeout=1
+                    request_timeout=60
                 )
 
             # If the request is successful, exit the loop

@@ -1,8 +1,8 @@
 import importlib
 from collections import namedtuple
-from configs import constants
-from utils import logger
-from configs.env import operators_path
+from opencopilot.configs import constants
+from opencopilot.utils import logger
+from opencopilot.configs.env import operators_path
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 UserQuery = namedtuple("UserQuery", ["user_query_str", "predefined_agent_communication"])

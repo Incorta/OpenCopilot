@@ -1,12 +1,12 @@
 import importlib
 import json
-import utils.logger as logger
-from configs import env, constants
-from handlers.executor import gpt_task_processor
-from configs.env import operators_path, operators_group
-from utils import jinja_utils
-from utils.exceptions import UnknownCommandError
-from utils.open_ai import completion_4
+import opencopilot.utils.logger as logger
+from opencopilot.configs import env, constants
+from opencopilot.handlers.executor import gpt_task_processor
+from opencopilot.configs.env import operators_path
+from opencopilot.utils import jinja_utils
+from opencopilot.utils.exceptions import UnknownCommandError
+from opencopilot.utils.open_ai import completion_4, completion_3_5
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
@@ -48,14 +48,14 @@ def plan_level_0(user_objective, user_session, session_query):
 
     prompt_text = jinja_utils.load_template(template_path, {
         "session_summary": session_summary_str,
-        "service_name": operators_group,
+        "service_name": operators_handler_module.group_name,
         "op_descriptions": get_operators_descriptions()
     })
 
     planner_messages.append({"role": "system", "content": prompt_text})
 
-    planner_messages.append({"role": "user", "content": f"From {env.operators_group} Operator: The user is asking: " + user_objective})
-    planner_messages.append({"role": "assistant", "content": "JSON:"})
+    planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
+    planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks in JSON:"})
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=planner_messages)
 
@@ -95,7 +95,7 @@ def plan_level_1(query_str, tasks):
 
         prompt_text = gpt_task_processor.get_command_prompt_from_task(query_str, tasks, i, "PLANNER")
 
-        json_str = completion_4.run([
+        json_str = completion_3_5.run([
             {"role": "system", "content": prompt_text},
             {"role": "assistant", "content": "JSON:\n"}])
 

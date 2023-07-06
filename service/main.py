@@ -6,10 +6,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
 
-from configs import constants
-from handlers import receive_and_route_user_request
-from handlers import session_handler
-from handlers.predefined_query_handler import create_user_query_tuple
+from opencopilot.configs import constants
+from controller import receive_and_route_user_request
+from controller import session_handler
+from controller.predefined_query_handler import create_user_query_tuple
 
 app = FastAPI()
 
@@ -82,7 +82,7 @@ async def handle_query(chat_id: str = None, query_string: str = "", predefined_o
     session = session_handler.get_or_create_session(chat_id)
     last_tasks_update = None
     last_session_query = None
-    for result in receive_and_route_user_request.async_run_planning_loop(user_query_obj, session):
+    for result in receive_and_route_user_request.run_planning_loop(user_query_obj, session):
         last_tasks_update = result[constants.session_query_tasks]
         last_session_query = result[constants.session_query]
         last_session_query.set_tasks(last_tasks_update)

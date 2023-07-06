@@ -1,6 +1,6 @@
 from enum import Enum
 from operators.postgres.memory import metadata_context_retriever
-from utils.exceptions import UnknownCommandError
+from opencopilot.utils.exceptions import UnknownCommandError
 
 
 class Commands(Enum):

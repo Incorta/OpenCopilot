@@ -12,4 +12,4 @@ chromadb~=0.3.22
 sse-starlette~=1.5.0
 urllib3~=1.26.15
 pandas~=1.5.3
-psycopg2~=2.9.6
+psycopg2-binary~=2.9.6

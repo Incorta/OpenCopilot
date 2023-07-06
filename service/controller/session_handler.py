@@ -1,6 +1,6 @@
 import copy
-import configs.constants as constants
-from utils import logger
+import opencopilot.configs.constants as constants
+from opencopilot.utils import logger
 
 sessions = {}
 

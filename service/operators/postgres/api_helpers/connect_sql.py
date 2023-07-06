@@ -1,15 +1,15 @@
-from configs import env
+import configs
 import datetime
 import psycopg2
 
 
 class Database:
     def __init__(self):
-        self.dbname = env.db_name
-        self.user = env.db_user
-        self.password = env.db_password
-        self.host = env.db_host
-        self.port = env.db_port
+        self.dbname = configs.db_name
+        self.user = configs.db_user
+        self.password = configs.db_password
+        self.host = configs.db_host
+        self.port = configs.db_port
 
     def get_connection(self):
         conn = psycopg2.connect(
