@@ -1,12 +1,12 @@
 import importlib
 import json
-import sdk.utils.logger as logger
-from sdk.configs import env, constants
-from sdk.handlers.executor import gpt_task_processor
-from sdk.configs.env import operators_path, operators_group
-from sdk.utils import jinja_utils
-from sdk.utils.exceptions import UnknownCommandError
-from sdk.utils.open_ai import completion_4
+import opencopilot.utils.logger as logger
+from opencopilot.configs import env, constants
+from opencopilot.handlers.executor import gpt_task_processor
+from opencopilot.configs.env import operators_path
+from opencopilot.utils import jinja_utils
+from opencopilot.utils.exceptions import UnknownCommandError
+from opencopilot.utils.open_ai import completion_4
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
@@ -48,13 +48,13 @@ def plan_level_0(user_objective, user_session, session_query):
 
     prompt_text = jinja_utils.load_template(template_path, {
         "session_summary": session_summary_str,
-        "service_name": operators_group,
+        "service_name": operators_handler_module.group_name,
         "op_descriptions": get_operators_descriptions()
     })
 
     planner_messages.append({"role": "system", "content": prompt_text})
 
-    planner_messages.append({"role": "user", "content": f"From {env.operators_group} Operator: The user is asking: " + user_objective})
+    planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
     planner_messages.append({"role": "assistant", "content": "JSON:"})
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=planner_messages)

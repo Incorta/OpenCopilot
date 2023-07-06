@@ -1,4 +1,4 @@
-import sdk.utils.logger as logger
+import opencopilot.utils.logger as logger
 
 
 def get_gpt_human_input(messages):

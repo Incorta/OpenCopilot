@@ -1,5 +1,5 @@
 import time
-from sdk.utils import logger
+from opencopilot.utils import logger
 
 
 def retry(action, retries=3, delay=2):

@@ -23,3 +23,5 @@ op_functions = {
         "operator_name": "UiText Operator"
     },
 }
+
+group_name = "postgres"

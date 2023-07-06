@@ -1,11 +1,11 @@
 import importlib
 import json
-from sdk.configs import env, constants
-from sdk.configs.env import operators_path, operators_group
-from sdk.utils import jinja_utils
-from sdk.utils import logger, exceptions
-from sdk.utils.exceptions import UnknownCommandError
-from sdk.utils.open_ai import completion_3_5
+from opencopilot.configs import env, constants
+from opencopilot.configs.env import operators_path
+from opencopilot.utils import jinja_utils
+from opencopilot.utils import logger, exceptions
+from opencopilot.utils.exceptions import UnknownCommandError
+from opencopilot.utils.open_ai import completion_3_5
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
@@ -44,7 +44,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
         "commands_command1": json.dumps([commands_help["commands"][0]["command"]], indent=2),
         "tasksLength": tasks_count,
         "sub_tasks_expectations": sub_tasks_expectations,
-        "service_name": operators_group
+        "service_name": operators_handler_module.group_name
     })
 
     return prompt_text

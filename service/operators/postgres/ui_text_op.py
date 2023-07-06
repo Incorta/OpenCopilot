@@ -1,5 +1,5 @@
 from enum import Enum
-from sdk.utils.exceptions import UnknownCommandError
+from opencopilot.utils.exceptions import UnknownCommandError
 
 
 class Commands(Enum):

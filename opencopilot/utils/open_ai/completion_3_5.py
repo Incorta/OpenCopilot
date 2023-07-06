@@ -1,8 +1,8 @@
 import json
 import openai
-from sdk.configs.env import openai_gpt35_api_key, openai_gpt35_api_base, openai_gpt35_api_type, openai_gpt35_api_version, openai_gpt35_api_engine
-import sdk.utils.logger as logger
-from sdk.utils.exceptions import APIFailureException
+from opencopilot.configs.env import openai_gpt35_api_key, openai_gpt35_api_base, openai_gpt35_api_type, openai_gpt35_api_version, openai_gpt35_api_engine
+import opencopilot.utils.logger as logger
+from opencopilot.utils.exceptions import APIFailureException
 import time
 
 

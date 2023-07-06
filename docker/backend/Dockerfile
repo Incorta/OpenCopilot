@@ -14,10 +14,9 @@ RUN pip3 install -r requirements.txt
 
 # Copy the directories
 COPY ./service ./service
-COPY ./sdk ./sdk
-
-ENV PYTHONPATH=/app:/app/service:/app/sdk
+COPY ./opencopilot ./opencopilot
+COPY ./start.sh ./
 
 # Run the server (Set the PYTHONPATH (Important to allow relative path imports))
-CMD ["sh", "-c", "ls && cd service && uvicorn main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "./start.sh"]
 
