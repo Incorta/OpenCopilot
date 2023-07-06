@@ -6,23 +6,24 @@ within the context of the capabilities of the software.
 
 Check [Meet OpenCopilot, Incorta’s Chat Agent](https://medium.com/engineering-incorta/meet-opencopilot-incortas-chatgpt-agent-e110a07b188) and [Comparing OpenCopilot to LangChain’s Plan and Execute Agent](https://medium.com/engineering-incorta/comparing-opencopilot-to-langchains-plan-and-execute-agent-479cf8de88db) for more information on how it works and the motivation behind it.
 
-
-## Install
-
-Run the following command to install OpenCopilot python library:
-
-`pip install opencopilot`
-
-
 ## Getting Started
 
 The best way to start using OpenCopilot is to run the main example. The main example is a simple copilot for Postgres DB server. Follow these steps to run the example:
 
-> Before you begin, make sure you have Docker and Docker Compose installed on your machine.
+### Step 1 : Install Docker:
+Make sure you have `Docker` and `Docker-Compose` installed on your machine.
 
-1. Make sure you you have OPENAI_API_KEY set in system envornments. Check [Adding OpenAI OPENAI_API_KEY to system environments](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety) for more details. OpenCopilot reqiures GPT-4.
-2. Navigate to `docker` folder then run the following command to create docker image:
+### Step 2 : OpenAI Key:
+| Note: OpenCopilot is only supported for ChatGPT-4 for the time being
+
+- Set the Key env variable: Make sure you you have OPENAI_API_KEY set in system envornments. Check [Adding OpenAI OPENAI_API_KEY to system environments](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)
+
+### Step 3 : Run the container
+
+Navigate to `docker` folder then run the following command to create docker image:
 	 `docker-compose up`
+
+### Step 4 : Chat with the OpenCopilot
 
 Once the application is running, you can access it in your web browser at `http://localhost:3000/`. You can try it out by asking the question "What is the total sales?", you should get an answer like the video at the top of the page. 
 
@@ -40,6 +41,11 @@ Check `service/controller` for more information.
 
 For accurate planning and SQL generation, we recommend using GPT-4.
 
+### Install sdk
+
+Run the following command to install OpenCopilot python library:
+
+`pip install opencopilot`
 
 ## Contact
 
