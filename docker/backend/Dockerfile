@@ -3,6 +3,10 @@
 # Use the official Python image
 FROM python:3.9
 
+# Set the environment variable
+ARG OPENAI_API_KEY
+ENV OPENAI_API_KEY=$OPENAI_API_KEY
+
 # Set the working directory
 WORKDIR /app
 

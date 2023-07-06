@@ -1,5 +1,5 @@
 # DATABASE CONFIGURATIONS
-db_host = "localhost"
+db_host = "database"
 db_name = "ecommerce"
 db_user = "root"
 db_password = "root"
