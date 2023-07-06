@@ -53,7 +53,7 @@ def run(messages, parse_as_json=True):
                     model="gpt-3.5-turbo",
                     temperature=0.2,
                     messages=messages,
-                    request_timeout=1
+                    request_timeout=60
                 )
 
             # If the request is successful, exit the loop
