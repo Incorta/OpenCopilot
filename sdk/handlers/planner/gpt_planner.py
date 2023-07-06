@@ -1,6 +1,6 @@
 import importlib
 import json
-import utils.logger as logger
+import sdk.utils.logger as logger
 from sdk.configs import env, constants
 from sdk.handlers.executor import gpt_task_processor
 from sdk.configs.env import operators_path, operators_group

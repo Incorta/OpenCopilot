@@ -1,6 +1,6 @@
 from sdk.configs import env
 import datetime
-import psycopg2
+# import psycopg2
 
 
 class Database:

@@ -1,7 +1,7 @@
 import json
 import os
-import configs.constants as constants
-from configs import env
+import sdk.configs.constants as constants
+from sdk.configs import env
 
 
 class CachedSessionsStoreHandler:

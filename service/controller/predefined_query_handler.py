@@ -1,7 +1,7 @@
 import importlib
 from collections import namedtuple
 from sdk.configs import constants
-from utils import logger
+from sdk.utils import logger
 from sdk.configs.env import operators_path
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")

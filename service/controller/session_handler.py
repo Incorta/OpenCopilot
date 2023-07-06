@@ -1,6 +1,6 @@
 import copy
 import sdk.configs.constants as constants
-from utils import logger
+from sdk.utils import logger
 
 sessions = {}
 

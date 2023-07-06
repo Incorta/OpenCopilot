@@ -3,9 +3,9 @@ import openai
 import time
 from sdk.configs.env import openai_gpt4_api_key, openai_gpt4_api_base, openai_gpt4_api_type, openai_gpt4_api_version, openai_gpt4_api_engine, use_gpt_4
 from sdk.configs.env import use_human_for_gpt_4
-from utils.open_ai import common, completion_3_5
-import utils.logger as logger
-from utils.exceptions import APIFailureException
+from sdk.utils.open_ai import common, completion_3_5
+import sdk.utils.logger as logger
+from sdk.utils.exceptions import APIFailureException
 
 
 def extract_json_block(text):

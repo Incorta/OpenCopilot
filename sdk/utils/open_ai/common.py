@@ -1,4 +1,4 @@
-import utils.logger as logger
+import sdk.utils.logger as logger
 
 
 def get_gpt_human_input(messages):

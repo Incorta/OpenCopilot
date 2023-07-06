@@ -1,5 +1,5 @@
 import time
-from utils import logger
+from sdk.utils import logger
 
 
 def retry(action, retries=3, delay=2):
