@@ -1,11 +1,11 @@
 import importlib
 import json
-from configs import env, constants
-from configs.env import operators_path, operators_group
-from utils import jinja_utils
-from utils import logger, exceptions
-from utils.exceptions import UnknownCommandError
-from utils.open_ai import completion_3_5
+from sdk.configs import env, constants
+from sdk.configs.env import operators_path, operators_group
+from sdk.utils import jinja_utils
+from sdk.utils import logger, exceptions
+from sdk.utils.exceptions import UnknownCommandError
+from sdk.utils.open_ai import completion_3_5
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 

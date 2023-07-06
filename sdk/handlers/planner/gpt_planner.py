@@ -1,12 +1,12 @@
 import importlib
 import json
 import utils.logger as logger
-from configs import env, constants
-from handlers.executor import gpt_task_processor
-from configs.env import operators_path, operators_group
-from utils import jinja_utils
-from utils.exceptions import UnknownCommandError
-from utils.open_ai import completion_4
+from sdk.configs import env, constants
+from sdk.handlers.executor import gpt_task_processor
+from sdk.configs.env import operators_path, operators_group
+from sdk.utils import jinja_utils
+from sdk.utils.exceptions import UnknownCommandError
+from sdk.utils.open_ai import completion_4
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
