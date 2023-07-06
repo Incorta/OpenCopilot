@@ -1,2 +1,2 @@
 # Usage: source .project_env, important to get python to use relative imports
-export PYTHONPATH=$PYTHONPATH:$(pwd)/service:$(pwd)/sdk
+export PYTHONPATH=$PYTHONPATH:$(pwd)
