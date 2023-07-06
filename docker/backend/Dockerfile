@@ -9,14 +9,15 @@ WORKDIR /app
 # Copy the requirements file
 COPY ./service/requirements.txt ./
 
-COPY ./sdk/ ./
-
 # Install the Python dependencies
 RUN pip3 install -r requirements.txt
 
-# Copy the rest of files
-COPY ./service/ ./
+# Copy the directories
+COPY ./service ./service
+COPY ./sdk ./sdk
+
+ENV PYTHONPATH=/app:/app/service:/app/sdk
 
 # Run the server (Set the PYTHONPATH (Important to allow relative path imports))
-CMD ["sh", "-c", "PYTHONPATH=$(pwd):$(pwd)/sdk uvicorn main:app --host 0.0.0.0 --port 8000"]
+CMD ["sh", "-c", "ls && cd service && uvicorn main:app --host 0.0.0.0 --port 8000"]
 
