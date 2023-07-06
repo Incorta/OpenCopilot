@@ -3,15 +3,14 @@ import os
 operators_path = os.getenv("OPERATORS_GROUPS", "YOUR.OPERATOR_GROUPS_PATH.OPERATOR1")
 
 # CHAT_GPT3.5 CREDENTIALS
-openai_gpt35_api_key = os.getenv("OPENAI_GPT35_API_KEY", "")
+openai_gpt35_api_key = os.getenv("OPENAI_API_KEY", "")
 openai_gpt35_api_type = os.getenv("OPENAI_GPT35_API_TYPE", "")
 openai_gpt35_api_base = os.getenv("OPENAI_GPT35_API_BASE", "")
 openai_gpt35_api_version = os.getenv("OPENAI_GPT35_API_VERSION", "")
 openai_gpt35_api_engine = os.getenv("OPENAI_GPT35_API_ENGINE", "")
 
 # CHAT_GPT4 CONFIGURATIONS
-use_gpt_4 = bool(os.getenv("USE_GPT_4", False))
-openai_gpt4_api_key = os.getenv("OPENAI_GPT4_API_KEY", "")
+openai_gpt4_api_key = os.getenv("OPENAI_API_KEY", "")
 openai_gpt4_api_type = os.getenv("OPENAI_GPT4_API_TYPE", "")
 openai_gpt4_api_base = os.getenv("OPENAI_GPT4_API_BASE", "")
 openai_gpt4_api_version = os.getenv("OPENAI_GPT4_API_VERSION", "")

@@ -6,7 +6,7 @@ from opencopilot.handlers.executor import gpt_task_processor
 from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
 from opencopilot.utils.exceptions import UnknownCommandError
-from opencopilot.utils.open_ai import completion_3_5
+from opencopilot.utils.open_ai import completion_4, completion_3_5
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
@@ -67,7 +67,7 @@ def plan_level_0(user_objective, user_session, session_query):
     if matching_level0_plan_gpt4 is not None:
         planned_tasks = matching_level0_plan_gpt4
     else:
-        planned_tasks = json.loads(completion_3_5.run(planner_messages))
+        planned_tasks = json.loads(completion_4.run(planner_messages))
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=planned_tasks)
 

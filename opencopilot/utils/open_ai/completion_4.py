@@ -1,7 +1,7 @@
 import json
 import openai
+from opencopilot.configs.env import openai_gpt4_api_key, openai_gpt4_api_base, openai_gpt4_api_type, openai_gpt4_api_version, openai_gpt4_api_engine
 import time
-from opencopilot.configs.env import openai_gpt4_api_key, openai_gpt4_api_base, openai_gpt4_api_type, openai_gpt4_api_version, openai_gpt4_api_engine, use_gpt_4
 from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils.open_ai import common, completion_3_5
 import opencopilot.utils.logger as logger
@@ -29,9 +29,7 @@ def extract_json_block(text):
 def run(messages, parse_as_json=True):
     # Send the prompt to the OpenAI API using gpt-4
     response = None
-    if not use_gpt_4:
-        return completion_3_5.run(messages, parse_as_json=True)
-
+    
     if openai_gpt4_api_type == "azure":
         openai.api_type = "azure"
         openai.api_version = openai_gpt4_api_version
