@@ -1,4 +1,5 @@
 # OpenCopilot
+<img src="/resources/open-copilot-demo.gif" width="896" height="504" />
 
 OpenCopilot is an AI-driven Copilot Agent developed by Incorta. It is designed to allow software companies to create a copilot for their software that can carry out complex tasks 
 within the context of the capabilities of the software. 
@@ -17,11 +18,11 @@ The best way to start using OpenCopilot is to run the main example. The main exa
 
 > Before you begin, make sure you have Docker and Docker Compose installed on your machine.
 
-1. Edit the file `start.sh` and add your OpenAI Key to OPENAI_GPT35_API_KEY.
-2. Bavigate to `docker` folder then run the following command to create docker image:
+1. Make sure you you have OPENAI_API_KEY set in system envornments. Check [Adding OpenAI OPENAI_API_KEY to system environments](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety) for more details.
+2. Navigate to `docker` folder then run the following command to create docker image:
 	 `docker-compose up`
 
-Once the application is running, you can access it in your web browser at `http://localhost:3000/`. You can try it out by asking the question "What was the sales last year?". 
+Once the application is running, you can access it in your web browser at `http://localhost:3000/`. You can try it out by asking the question "What is the total sales?", you should get an answer like the video at the top of the page. 
 
 ## How to use
 
