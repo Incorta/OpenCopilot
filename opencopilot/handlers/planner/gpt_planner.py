@@ -38,6 +38,10 @@ def get_operators_descriptions():
     return operators_descriptions_str
 
 
+def list_operators():
+    return [str(key) for key in operators_handler_module.op_functions.keys()]
+
+
 def plan_level_0(user_objective, user_session, session_query):
     planner_messages = []
 
@@ -49,7 +53,8 @@ def plan_level_0(user_objective, user_session, session_query):
     prompt_text = jinja_utils.load_template(template_path, {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.group_name,
-        "op_descriptions": get_operators_descriptions()
+        "op_descriptions": get_operators_descriptions(),
+        "operators": list_operators()
     })
 
     planner_messages.append({"role": "system", "content": prompt_text})

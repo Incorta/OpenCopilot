@@ -16,7 +16,7 @@ Make sure you have `Docker` and `Docker-Compose` installed on your machine.
 ### Step 2 : OpenAI Key:
 | Note: OpenCopilot is only supported for ChatGPT-4 for the time being
 
-- Set the Key env variable: Make sure you you have OPENAI_API_KEY set in system envornments. Check [Adding OpenAI OPENAI_API_KEY to system environments](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)
+- Set the Key env variable: Make sure you you have OPENAI_API_KEY set in system environments. Check [Adding OpenAI OPENAI_API_KEY to system environments](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)
 
 ### Step 3 : Run the container
 
