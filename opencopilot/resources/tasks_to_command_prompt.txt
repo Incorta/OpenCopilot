@@ -11,9 +11,11 @@ You must generate one of the following commands only, and it must follow the JSO
 
 Commands Overview: {{ commands_overview }}
 
-Command 1 Description: {{ commands_command1_description }}
-Command 1 JSON Format:
-{{ commands_command1 }}
+{% for command in commands %}
+Command {{ loop.index }} Description: {{ command["command_description"] }}
+Command {{ loop.index }} JSON Format:
+{{ command["command"]|tojson }}
+{% endfor %}
 
 {% if tasksLength > 0 %}
 Now, given the list of possible commands, and the list of tasks, generate the command for Task_id: {{ curTaskId }}
