@@ -2,6 +2,7 @@ import os
 # OPERATORS CONFIGURATIONS
 operators_path = os.getenv("OPERATORS_GROUPS", "YOUR.OPERATOR_GROUPS_PATH.OPERATOR1")
 
+test_env = os.getenv("TEST_ENVIRONMENT", "")
 # CHAT_GPT3.5 CREDENTIALS
 openai_gpt35_api_key = os.getenv("OPENAI_API_KEY", "")
 openai_gpt35_api_type = os.getenv("OPENAI_GPT35_API_TYPE", "")

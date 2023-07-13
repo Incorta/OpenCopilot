@@ -1,12 +1,14 @@
+import importlib
 import json
 import os
 import opencopilot.configs.constants as constants
 from opencopilot.configs import env
+operators_handler_module = importlib.import_module(env.operators_path + ".operators_handler")
 
 
 class CachedSessionsStoreHandler:
     _instance = None
-    _sessions_store_filename = f"tests/E2E_tests/postgres/sessions_store.json"
+    _sessions_store_filename = f"tests/E2E_tests/{operators_handler_module.group_name}/{env.test_env}/sessions_store.json"
     _sessions_dict = {}
     _cached_session_idx = 0
 

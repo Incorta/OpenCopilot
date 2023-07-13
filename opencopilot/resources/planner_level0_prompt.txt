@@ -21,7 +21,7 @@ You should only respond with tasks in JSON format as described in the following 
             "id": {"type":"integer"},
             "name": {"type": "string"},
             "goal_and_purpose": {"type": "string"},
-            "operator": {"type": "string", "enum": ["MetaDataOp", "QueryOp", "UiTextOp"]},
+            "operator": {"type": "string", "enum": {{ operators }}},
             "status": {"type": "string","enum": ["TODO","DONE"]},
             "depends_on_output_of": {"type": "array","items": {"type": "integer"},"uniqueItems": true},
             "detailed_purpose": {"type": "string"},
