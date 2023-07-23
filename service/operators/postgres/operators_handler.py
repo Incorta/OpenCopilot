@@ -1,5 +1,6 @@
 from operators.postgres import query_op, metadata_op, ui_text_op
 
+
 op_functions = {
     "MetaDataOp": {
         "get_commands_help": metadata_op.get_commands_help,
@@ -21,7 +22,7 @@ op_functions = {
         "get_commands_help": ui_text_op.get_commands_help,
         "handle_command": lambda command: ui_text_op.handle_command(command),
         "file_name": "ui_text_op",
-        "description": "This operator can send a reply to the user.",
+        "description": "This operator can sends text reply to the user.",
         "operator_name": "UiText Operator",
         "preferred_LLM": "GPT-3.5"
     },
