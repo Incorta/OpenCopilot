@@ -13,6 +13,7 @@ WORKDIR /app
 # Copy the directories
 COPY ./service ./service
 COPY ./opencopilot ./opencopilot
+COPY ./opencopilot/configs/env-postgres.py ./opencopilot/configs/env.py
 COPY ./start.sh ./
 
 # Install the Python dependencies
