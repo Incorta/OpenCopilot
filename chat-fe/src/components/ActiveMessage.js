@@ -97,7 +97,7 @@ const ActiveMessage = ({ key, message, onFinish }) => {
 								<CheckCircle className={actionListClasses.smallIcon} style={{ color: doneColor }}  /> :
 								<PendingIcon className={actionListClasses.smallIcon} />}
 							</ListItemIcon>
-							<ListItemText primary={task.goal_and_purpose} classes={{ primary: actionListClasses.smallText }}  style={{ color: textColor }} />
+							<ListItemText primary={task.short_description} classes={{ primary: actionListClasses.smallText }}  style={{ color: textColor }} />
 						</ListItem>
 					)
 				})}
