@@ -16,8 +16,8 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
 
     # Check that the task's operator exists in the operators' group op_functions and get its command help
     if task[constants.Operator] in operators_handler_module.op_functions:
-        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"](
-        )
+        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"]()
+        commands_help["overview"] = operators_handler_module.op_functions[task[constants.Operator]]["description"]
     else:
         raise exceptions.UnknownCommandError(
             f"Unknown command operator: {task[constants.Operator]}")

@@ -53,13 +53,13 @@ def run(messages, parse_as_json=True):
                 if openai_gpt4_api_type == "azure":
                     response = openai.ChatCompletion.create(
                         engine=openai_gpt4_api_engine,
-                        temperature=0.2,
+                        temperature=0,
                         messages=messages
                     )
                 else:
                     response = openai.ChatCompletion.create(
                         model="gpt-4",
-                        temperature=0.2,
+                        temperature=0,
                         messages=messages
                     )
                 # If the request is successful, exit the loop

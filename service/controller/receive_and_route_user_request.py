@@ -48,7 +48,7 @@ def execute_task(query_str, tasks, task_index, session_query):
     if constants.SubTasks not in task:
         execute_sub_task(query_str, tasks, task_index, session_query)
     else:
-        logger.system_message("Executing sub-task of the task: " + task["name"])
+        logger.system_message("Executing sub-task of the task: " + task["short_description"])
         sub_tasks = task[constants.SubTasks]
         for i in range(0, len(sub_tasks)):
             execute_sub_task(query_str, sub_tasks, i, session_query)
@@ -64,8 +64,7 @@ async def async_run_planning_loop(query_obj, session):
 
 def run_planning_loop(user_query_obj, session):
     tasks = [{
-        "name": "Planning",
-        "goal_and_purpose": "Plan for answering the query",
+        "short_description": "Planning ...",
         "operator": "Planner",
         "status": constants.TODO,
     }]

@@ -9,8 +9,6 @@ class Commands(Enum):
 
 def get_commands_help():
     return {
-        "overview": """ Creates a sql query and executes it on SQL DB. The queries would be on data and not metadata. """
-        ,
         "commands": [
             {
                 "command": {
