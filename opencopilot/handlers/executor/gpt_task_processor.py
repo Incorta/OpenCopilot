@@ -92,30 +92,3 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
 
     return command
 
-
-def enhance_and_finalize_task_result(command, task, task_index, session_entry):
-    prompt_text = jinja_utils.load_template("resources/finalize_task_prompt.txt", {
-        "taskJson": json.dumps(task),
-        "initialCommand": json.dumps(command)
-    })
-
-    logger.system_message(
-        "Calling ChatGPT 3.5, to fine tune, and finalize task result")
-    messages = [{"role": "system", "content": prompt_text}]
-    logger.print_gpt_messages(messages)
-
-    """ If get_op_enhanced_result is enabled, retrieve operator's enhanced_result from sessions_store instead of requesting it from GPT """
-    chat_gpt_response = None
-    if env.sessions_getting_mode and (env.get_all or env.get_op_enhanced_result):
-        chat_gpt_response = session_entry.get_cached_agent_communications(
-            component=task_index, sub_component=constants.EnhancedResult)
-
-    if chat_gpt_response is None:
-        chat_gpt_response = completion_3_5.run(
-            messages
-        )
-
-    logger.system_message("Got final task result")
-    logger.operator_response(chat_gpt_response)
-
-    return json.loads(chat_gpt_response)

@@ -14,7 +14,7 @@ def get_commands_help():
             {
                 "command": {
                     "command_name": "GetRelevantTable",
-                    "args": {"query": "Query to search for the most relevant table", "require_result_summary": False},
+                    "args": {"query": "Query to search for the most relevant table"},
                 },
                 "command_description": "Given query, search the available tables, to find the most relevant table. "
                                        "That contains all the required fields",

@@ -38,10 +38,6 @@ def execute_sub_task(query_str, tasks, task_index, session_query):
     tasks[task_index][constants.Status] = constants.DONE
     tasks[task_index][constants.Result] = result
 
-    if constants.RequireResultSummary in command[constants.Args] and command[constants.Args][constants.RequireResultSummary]:
-        tasks[task_index] = gpt_task_processor.enhance_and_finalize_task_result(command, tasks[task_index], task_index, session_query)
-        session_query.set_pending_agent_communications(component=task_index, sub_component=constants.EnhancedResult, value=tasks[task_index][constants.Result])
-
 
 def execute_task(query_str, tasks, task_index, session_query):
     task = tasks[task_index]
