@@ -5,7 +5,7 @@ from opencopilot.configs.env import operators_path
 from opencopilot.handlers.executor import gpt_task_processor
 from opencopilot.handlers.planner import gpt_planner
 from controller.predefined_query_handler import validate_predefined_query
-from opencopilot.tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
+from service.tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
 from opencopilot.utils.exceptions import UnknownCommandError
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
