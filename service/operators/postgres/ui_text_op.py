@@ -12,7 +12,7 @@ def get_commands_help():
             {
                 "command": {
                     "command_name": "GenerateTextCommand",
-                    "args": {'message': "the exact text that will be sent to the user.", "require_result_summary": False},
+                    "args": {'message': "the exact text that will be sent to the user."},
                 },
                 "command_description": "Generate a simple text command to be shown in the chat app"
             }

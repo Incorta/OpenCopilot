@@ -5,7 +5,7 @@ from opencopilot.configs.env import operators_path
 from opencopilot.handlers.executor import gpt_task_processor
 from opencopilot.handlers.planner import gpt_planner
 from controller.predefined_query_handler import validate_predefined_query
-from opencopilot.tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
+from service.tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
 from opencopilot.utils.exceptions import UnknownCommandError
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
@@ -37,10 +37,6 @@ def execute_sub_task(query_str, tasks, task_index, session_query):
 
     tasks[task_index][constants.Status] = constants.DONE
     tasks[task_index][constants.Result] = result
-
-    if constants.RequireResultSummary in command[constants.Args] and command[constants.Args][constants.RequireResultSummary]:
-        tasks[task_index] = gpt_task_processor.enhance_and_finalize_task_result(command, tasks[task_index], task_index, session_query)
-        session_query.set_pending_agent_communications(component=task_index, sub_component=constants.EnhancedResult, value=tasks[task_index][constants.Result])
 
 
 def execute_task(query_str, tasks, task_index, session_query):
