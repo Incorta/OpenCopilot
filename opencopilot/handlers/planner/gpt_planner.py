@@ -1,3 +1,4 @@
+import copy
 import importlib
 import json
 import opencopilot.utils.logger as logger
@@ -79,7 +80,7 @@ def plan_level_0(user_objective, user_session, session_query):
     planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
     planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks in JSON:"})
 
-    session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=planner_messages)
+    session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     """ If get_plan_response is enabled, retrieve plan0_response from sessions_store instead of requesting it from GPT """
     matching_level0_plan_gpt4 = None
@@ -95,7 +96,7 @@ def plan_level_0(user_objective, user_session, session_query):
     else:
         planned_tasks = json.loads(completion_4.run(planner_messages))
 
-    session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=planned_tasks)
+    session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 
     if constants.session_query_tasks in planned_tasks:
         tasks = planned_tasks[constants.session_query_tasks]
