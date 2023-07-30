@@ -3,6 +3,7 @@ import importlib
 import json
 from opencopilot.configs import env, constants
 from opencopilot.configs.env import operators_path
+from opencopilot.handlers.planner.gpt_planner import compare_requests
 from opencopilot.utils import jinja_utils
 from opencopilot.utils import logger, exceptions
 from opencopilot.utils.exceptions import UnknownCommandError
@@ -67,19 +68,21 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     """ If get_op_command is enabled, retrieve operator's command from sessions_store instead of requesting it from GPT """
     command = None
     if env.sessions_getting_mode and (env.get_all or env.get_op_command):
-        command = session_entry.get_cached_agent_communications(
-            component=task_index, sub_component=constants.Command)
+        task_to_command_request = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Request)
+        if compare_requests(messages, task_to_command_request):
+            command = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Command)
+        else:
+            logger.system_message("Your request to the executor agent has changed, will regenerate the command!")
 
     preferred_LLM = operators_handler_module.op_functions[tasks[task_index]
                                                           ["operator"]]["preferred_LLM"]
     if command is None:
+        logger.system_message(f"Calling ChatGPT {preferred_LLM}:")
         if preferred_LLM == "GPT-4":
-            logger.system_message("Calling ChatGPT {preferred_LLM}:")
             chat_gpt_response = completion_4.run(
                 messages
             )
         else:
-            logger.system_message("Calling ChatGPT GPT-3.5:")
             chat_gpt_response = completion_3_5.run(
                 messages
             )

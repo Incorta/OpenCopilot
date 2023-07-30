@@ -33,14 +33,31 @@ def get_operators_descriptions():
     operators_descriptions_str = ""
     for operator in operators_handler_module.op_functions:
         operators_descriptions_str += (
-                    "- " + operators_handler_module.op_functions[operator]["operator_name"] + " --> "
-                    + "(" + operator + ") " + operators_handler_module.op_functions[operator]["description"] + "\n")
+                "- " + operators_handler_module.op_functions[operator]["operator_name"] + " --> "
+                + "(" + operator + ") " + operators_handler_module.op_functions[operator]["description"] + "\n")
 
     return operators_descriptions_str
 
 
 def list_operators():
     return [str(key) for key in operators_handler_module.op_functions.keys()]
+
+
+def compare_requests(request1, request2):
+    """
+    Compare two lists of JSON objects and return True if they are identical, False otherwise.
+    """
+
+    if len(request1) != len(request2):
+        return False
+
+    for i in range(len(request1)):
+        json1 = json.dumps(request1[i], sort_keys=True)
+        json2 = json.dumps(request2[i], sort_keys=True)
+        if json1 != json2:
+            return False
+
+    return True
 
 
 def plan_level_0(user_objective, user_session, session_query):
@@ -68,7 +85,11 @@ def plan_level_0(user_objective, user_session, session_query):
     """ If get_plan_response is enabled, retrieve plan0_response from sessions_store instead of requesting it from GPT """
     matching_level0_plan_gpt4 = None
     if env.sessions_getting_mode and (env.get_all or env.get_plan_response):
-        matching_level0_plan_gpt4 = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response)
+        level0_plan_request = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request)
+        if compare_requests(level0_plan_request, planner_messages):
+            matching_level0_plan_gpt4 = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response)
+        else:
+            logger.system_message("Your request to the planning agent has changed, will regenerate the response!")
 
     if matching_level0_plan_gpt4 is not None:
         planned_tasks = matching_level0_plan_gpt4
