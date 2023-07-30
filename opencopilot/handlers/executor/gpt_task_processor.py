@@ -69,7 +69,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     command = None
     if env.sessions_getting_mode and (env.get_all or env.get_op_command):
         task_to_command_request = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Request)
-        if compare_requests(messages, task_to_command_request):
+        if task_to_command_request and compare_requests(messages, task_to_command_request):
             command = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Command)
         else:
             logger.system_message("Your request to the executor agent has changed, will regenerate the command!")

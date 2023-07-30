@@ -78,7 +78,7 @@ def plan_level_0(user_objective, user_session, session_query):
     planner_messages.append({"role": "system", "content": prompt_text})
 
     planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
-    planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks in JSON:"})
+    planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks and one or more UI Operator in JSON:"})
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
@@ -86,7 +86,7 @@ def plan_level_0(user_objective, user_session, session_query):
     matching_level0_plan_gpt4 = None
     if env.sessions_getting_mode and (env.get_all or env.get_plan_response):
         level0_plan_request = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request)
-        if compare_requests(level0_plan_request, planner_messages):
+        if level0_plan_request and compare_requests(level0_plan_request, planner_messages):
             matching_level0_plan_gpt4 = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response)
         else:
             logger.system_message("Your request to the planning agent has changed, will regenerate the response!")
