@@ -1,3 +1,4 @@
+import copy
 import importlib
 import json
 from opencopilot.configs import env, constants
@@ -61,7 +62,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     logger.print_gpt_messages(messages)
 
     session_entry.set_pending_agent_communications(
-        component=task_index, sub_component="request", value=messages)
+        component=task_index, sub_component="request", value=copy.deepcopy(messages))
 
     """ If get_op_command is enabled, retrieve operator's command from sessions_store instead of requesting it from GPT """
     command = None
