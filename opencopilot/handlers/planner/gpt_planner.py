@@ -1,6 +1,6 @@
 import copy
-import importlib
 import json
+import importlib
 import opencopilot.utils.logger as logger
 from opencopilot.configs import env, constants
 from opencopilot.handlers.executor import gpt_task_processor
@@ -43,67 +43,37 @@ def list_operators():
     return [str(key) for key in operators_handler_module.op_functions.keys()]
 
 
-def compare_requests(request1, request2):
-    """
-    Compare two lists of JSON objects and return True if they are identical, False otherwise.
-    """
-
-    if len(request1) != len(request2):
-        return False
-
-    for i in range(len(request1)):
-        json1 = json.dumps(request1[i], sort_keys=True)
-        json2 = json.dumps(request2[i], sort_keys=True)
-        if json1 != json2:
-            return False
-
-    return True
-
-
 def plan_level_0(user_objective, user_session, session_query):
+    
+    # Construct planner request
     planner_messages = []
-
     template_path = "resources/planner_level0_prompt.txt"
     session_summary = summarize_session_queries(user_session)
-
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
-
     prompt_text = jinja_utils.load_template(template_path, {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.group_name,
         "op_descriptions": get_operators_descriptions(),
         "operators": list_operators()
     })
-
     planner_messages.append({"role": "system", "content": prompt_text})
-
     planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
     planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks and one or more UI Operator in JSON:"})
-
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
-    """ If get_plan_response is enabled, retrieve plan0_response from sessions_store instead of requesting it from GPT """
-    matching_level0_plan_gpt4 = None
-    if env.sessions_getting_mode and (env.get_all or env.get_plan_response):
-        level0_plan_request = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request)
-        if level0_plan_request and compare_requests(level0_plan_request, planner_messages):
-            matching_level0_plan_gpt4 = session_query.get_cached_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response)
-        else:
-            logger.system_message("Your request to the planning agent has changed, will regenerate the response!")
-
-    if matching_level0_plan_gpt4 is not None:
-        planned_tasks = matching_level0_plan_gpt4
+    # Construct planner response
+    cached_level0_plan_response = session_query.get_cached_agent_communications_planner_response(planner_messages)
+    if cached_level0_plan_response is not None:
+        planned_tasks = cached_level0_plan_response
     else:
         planned_tasks = json.loads(completion_4.run(planner_messages))
-
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 
+    # Parse tasks
     if constants.session_query_tasks in planned_tasks:
         tasks = planned_tasks[constants.session_query_tasks]
-
     elif isinstance(planned_tasks, list):
         tasks = planned_tasks
-
     else:
         raise UnknownCommandError(f"Unexpected format for the tasks: {planned_tasks}")
 

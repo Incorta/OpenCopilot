@@ -3,7 +3,6 @@ import importlib
 import json
 from opencopilot.configs import env, constants
 from opencopilot.configs.env import operators_path
-from opencopilot.handlers.planner.gpt_planner import compare_requests
 from opencopilot.utils import jinja_utils
 from opencopilot.utils import logger, exceptions
 from opencopilot.utils.exceptions import UnknownCommandError
@@ -55,24 +54,22 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
 
 
 def get_command_from_task(query_str, tasks, task_index, session_entry):
+
+    # -- Build request
     prompt_text = get_command_prompt_from_task(
         query_str, tasks, task_index, "EXECUTOR")
-
     logger.system_message("Creating command from task description")
     messages = [{"role": "system", "content": prompt_text}]
     logger.print_gpt_messages(messages)
-
     session_entry.set_pending_agent_communications(
         component=task_index, sub_component="request", value=copy.deepcopy(messages))
 
-    """ If get_op_command is enabled, retrieve operator's command from sessions_store instead of requesting it from GPT """
+    # -- Get command
     command = None
-    if env.sessions_getting_mode and (env.get_all or env.get_op_command):
-        task_to_command_request = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Request)
-        if task_to_command_request and compare_requests(messages, task_to_command_request):
-            command = session_entry.get_cached_agent_communications(component=task_index, sub_component=constants.Command)
-        else:
-            logger.system_message("Your request to the executor agent has changed, will regenerate the command!")
+    cached_operator_command = session_entry.get_cached_agent_communications_operator_command(task_index, messages)
+
+    if cached_operator_command is not None:
+        command = cached_operator_command
 
     preferred_LLM = operators_handler_module.op_functions[tasks[task_index]
                                                           ["operator"]]["preferred_LLM"]
