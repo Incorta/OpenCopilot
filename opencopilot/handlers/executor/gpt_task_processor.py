@@ -74,7 +74,6 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     preferred_LLM = operators_handler_module.op_functions[tasks[task_index]
                                                           ["operator"]]["preferred_LLM"]
     if command is None:
-        logger.system_message(f"Calling ChatGPT {preferred_LLM}:")
         if preferred_LLM == "GPT-4":
             chat_gpt_response = completion_4.run(
                 messages
