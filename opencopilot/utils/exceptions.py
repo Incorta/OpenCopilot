@@ -8,3 +8,8 @@ class APIFailureException(Exception):
 
 class IllegalArgumentException(Exception):
     pass
+
+
+class UnauthorizedUserException(Exception):
+    pass
+
