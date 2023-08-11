@@ -6,7 +6,7 @@ from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
 from opencopilot.utils import logger, exceptions
 from opencopilot.utils.exceptions import UnknownCommandError
-from opencopilot.utils.open_ai import completion_3_5, completion_4
+from opencopilot.utils.langchain import llm_GPT
 
 operators_handler_module = importlib.import_module(
     operators_path + ".operators_handler")
@@ -74,14 +74,11 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     preferred_LLM = operators_handler_module.op_functions[tasks[task_index]
                                                           ["operator"]]["preferred_LLM"]
     if command is None:
-        if preferred_LLM == "GPT-4":
-            chat_gpt_response = completion_4.run(
-                messages
-            )
-        else:
-            chat_gpt_response = completion_3_5.run(
-                messages
-            )
+        chat_gpt_response = llm_GPT.run(
+            messages,
+            preferred_LLM
+        )
+        
         command = json.loads(chat_gpt_response)
 
     logger.system_message("Got Command, will execute it:")
