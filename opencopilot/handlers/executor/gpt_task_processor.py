@@ -71,12 +71,11 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     if cached_operator_command is not None:
         command = cached_operator_command
 
-    preferred_LLM = operators_handler_module.op_functions[tasks[task_index]
-                                                          ["operator"]]["preferred_LLM"]
+    # LLM_name = operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"]
     if command is None:
         chat_gpt_response = llm_GPT.run(
             messages,
-            preferred_LLM
+            ["Azure-OpenAI-GPT3.5"]
         )
         
         command = json.loads(chat_gpt_response)
