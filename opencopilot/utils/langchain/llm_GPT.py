@@ -1,12 +1,19 @@
 import json
 import opencopilot.utils.logger as logger
-from opencopilot.configs.env import llm_models_configurations, use_human_for_gpt_4
+from opencopilot.configs import LLM_Configurations
+from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils.exceptions import APIFailureException
 from langchain.llms import AzureOpenAI
 from langchain import OpenAI
 from opencopilot.utils.open_ai import common
 
-llm_configs = json.loads(llm_models_configurations)
+llm_configs = None
+
+
+def initialize_configurations():
+    llm_models_configurations = LLM_Configurations.execute_callback_cmc()
+    print('llm_models_configurations== ', llm_models_configurations)
+    llm_configs = json.loads(llm_models_configurations)
 
 
 def extract_json_block(text):
