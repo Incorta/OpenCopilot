@@ -1,5 +1,4 @@
-from abc import ABC, abstractmethod
-
+from abc import ABC
 from opencopilot.utils.langchain import llm_GPT
 
 
@@ -10,9 +9,7 @@ class LLMConfigurationsInterface(ABC):
 
 
 def register_callback(cb):
-    class IncortaLLMConfigurations(LLMConfigurationsInterface):
-
-        global callback
+    global callback
     callback = cb
     llm_GPT.initialize_configurations()
 

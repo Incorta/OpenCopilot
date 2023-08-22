@@ -1,19 +1,33 @@
 import json
 import opencopilot.utils.logger as logger
 from opencopilot.configs import LLM_Configurations
+from opencopilot.configs.constants import ModelConfigurations, GPT3_ENGINE, GPT4_ENGINE
 from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils.exceptions import APIFailureException
 from langchain.llms import AzureOpenAI
 from langchain import OpenAI
 from opencopilot.utils.open_ai import common
 
-llm_configs = None
-
 
 def initialize_configurations():
-    llm_models_configurations = LLM_Configurations.execute_callback_cmc()
-    print('llm_models_configurations== ', llm_models_configurations)
-    llm_configs = json.loads(llm_models_configurations)
+    global llm_configs
+    llm_configs = LLM_Configurations.execute_callback_cmc()
+
+
+def get_azure_openai_configs(model):
+    model_name = llm_configs[model][ModelConfigurations.API_DEPLOYMENT_NAME.value]
+    key = llm_configs[model][ModelConfigurations.API_KEY.value]
+    version = llm_configs[model][ModelConfigurations.API_DEPLOYMENT_VERSION.value]
+    base = llm_configs[model][ModelConfigurations.API_ENDPOINT.value]
+
+    return model_name, key, version, base
+
+
+def get_openai_configs(model):
+    key = llm_configs[model][ModelConfigurations.API_KEY.value]
+    organization = llm_configs[model][ModelConfigurations.ORGANIZATION.value]
+
+    return key, organization
 
 
 def extract_json_block(text):
@@ -35,12 +49,16 @@ def extract_json_block(text):
 
 
 def run(messages, llm_names):
+    global llm
     model = None
 
+    # Select the first found configured model
     for llm_model in llm_names:
         if llm_model in llm_configs:
             model = llm_model
             break
+
+    engine = GPT3_ENGINE if "GPT3" in model else GPT4_ENGINE
 
     if model is None:
         print("Didn't find configurations of any of the desired models, Please set the configuration of the desired "
@@ -53,13 +71,8 @@ def run(messages, llm_names):
     if use_human_for_gpt_4 and "GPT4" in model:
         return common.get_gpt_human_input(messages)
 
-    engine = llm_configs[model]["engine"]
-    model_name = llm_configs[model]["model_name"]
-    key = llm_configs[model]["key"]
-    version = llm_configs[model]["version"]
-    base = llm_configs[model]["base"]
-
-    if "Azure" in model:
+    if "AZURE" in model:
+        model_name, key, version, base = get_azure_openai_configs(model)
         llm = AzureOpenAI(
             openai_api_key=key,
             api_version=version,
@@ -69,13 +82,11 @@ def run(messages, llm_names):
             model_name=model_name,
             temperature=0
         )
-    elif "OpenAI" in model:
+    elif "OPEN_AI" in model:
+        key, organization = get_openai_configs(model)
         llm = OpenAI(
             openai_api_key=key,
-            api_version="2023-05-15",
-            api_type="azure",
             engine=engine,
-            model_name=model_name,
             temperature=0
         )
     else:
