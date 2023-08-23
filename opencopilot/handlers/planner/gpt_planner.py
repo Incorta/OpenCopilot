@@ -66,7 +66,7 @@ def plan_level_0(user_objective, user_session, session_query):
     if cached_level0_plan_response is not None:
         planned_tasks = cached_level0_plan_response
     else:
-        planned_tasks = json.loads(llm_GPT.run(planner_messages, [constants.GPTModel.AZURE_OPENAI_GPT3.value])) ###TODO:: get the array from configs.
+        planned_tasks = json.loads(llm_GPT.run(planner_messages, [constants.LLMModelName.AZURE_OPENAI_GPT3.value]))
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 
     # Parse tasks
@@ -94,7 +94,7 @@ def plan_level_1(query_str, tasks):
 
         json_str = llm_GPT.run([
             {"role": "system", "content": prompt_text},
-            {"role": "assistant", "content": "JSON:\n"}], [constants.GPTModel.AZURE_OPENAI_GPT3.value])
+            {"role": "assistant", "content": "JSON:\n"}], [constants.LLMModelName.AZURE_OPENAI_GPT3.value])
 
         planned_tasks = json.loads(json_str)
 

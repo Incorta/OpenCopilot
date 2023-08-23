@@ -28,12 +28,13 @@ GPT3_ENGINE = "gpt35-model"
 GPT4_ENGINE = "gpt4-model"
 
 
-class GPTModel(Enum):
+class LLMModelName(Enum):
     # Maps variables to model names
     OPENAI_GPT3 = "OPEN_AI_GPT3"
     OPENAI_GPT4 = "OPEN_AI_GPT4"
     AZURE_OPENAI_GPT3 = "AZURE_OPEN_AI_GPT3"
     AZURE_OPENAI_GPT4 = "AZURE_OPEN_AI_GPT4"
+    EMBEDDING_Model = "EMBEDDING"
 
 
 class ModelConfigurations(Enum):
@@ -43,3 +44,5 @@ class ModelConfigurations(Enum):
     API_DEPLOYMENT_VERSION = "api_deployment_version"
     API_ENDPOINT = "api_endpoint"
     ORGANIZATION = "organization"
+    API_MODEL_NAME = "api_model_name"
+    API_TYPE = "api_type"
