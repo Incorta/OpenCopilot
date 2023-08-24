@@ -74,7 +74,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     if command is None:
         chat_gpt_response = llm_GPT.run(
             messages,
-            [constants.LLMModelName.AZURE_OPENAI_GPT3.value]
+            operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"]
         )
         
         command = json.loads(chat_gpt_response)

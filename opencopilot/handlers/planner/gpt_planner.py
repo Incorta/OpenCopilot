@@ -94,7 +94,8 @@ def plan_level_1(query_str, tasks):
 
         json_str = llm_GPT.run([
             {"role": "system", "content": prompt_text},
-            {"role": "assistant", "content": "JSON:\n"}], [constants.LLMModelName.AZURE_OPENAI_GPT3.value])
+            {"role": "assistant", "content": "JSON:\n"}],
+            [constants.LLMModelName.AZURE_OPENAI_GPT4.value, constants.LLMModelName.AZURE_OPENAI_GPT3.value])
 
         planned_tasks = json.loads(json_str)
 

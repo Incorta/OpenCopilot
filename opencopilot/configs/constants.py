@@ -34,15 +34,3 @@ class LLMModelName(Enum):
     OPENAI_GPT4 = "OPEN_AI_GPT4"
     AZURE_OPENAI_GPT3 = "AZURE_OPEN_AI_GPT3"
     AZURE_OPENAI_GPT4 = "AZURE_OPEN_AI_GPT4"
-    EMBEDDING_Model = "EMBEDDING"
-
-
-class ModelConfigurations(Enum):
-    # Maps configurations of each model to its corresponding configuration
-    API_DEPLOYMENT_NAME = "api_deployment_name"
-    API_KEY = "api_key"
-    API_DEPLOYMENT_VERSION = "api_deployment_version"
-    API_ENDPOINT = "api_endpoint"
-    ORGANIZATION = "organization"
-    API_MODEL_NAME = "api_model_name"
-    API_TYPE = "api_type"
