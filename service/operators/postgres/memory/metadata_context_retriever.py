@@ -7,11 +7,21 @@ from operators.postgres.api_common.schemas import get_table_columns
 from opencopilot.utils import logger
 from operators.postgres.api_common import schemas
 from opencopilot.utils import network
-from opencopilot.configs.env import openai_text_ada_api_key, enable_ad_hoc_views_indexing
+from opencopilot.configs.env import (
+    embedding_api_key,
+    embedding_api_base,
+    embedding_api_type,
+    embedding_api_version,
+    enable_ad_hoc_views_indexing
+)
+
 
 openai_ef = embedding_functions.OpenAIEmbeddingFunction(
-    api_key=openai_text_ada_api_key,
-    model_name="text-embedding-ada-002"
+    model_name="text-embedding-ada-002",
+    api_key=embedding_api_key,
+    api_base=embedding_api_base,
+    api_type=embedding_api_type,
+    api_version=embedding_api_version
 )
 
 # setup Chroma in-memory, for easy prototyping. Can add persistence easily!

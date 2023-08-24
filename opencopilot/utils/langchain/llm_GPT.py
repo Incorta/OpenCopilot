@@ -11,7 +11,7 @@ from opencopilot.utils.open_ai import common
 
 def initialize_configurations():
     global llm_configs
-    llm_configs = LLM_Configurations.execute_callback()
+    llm_configs = LLM_Configurations.get_configs()
 
 
 def get_azure_openai_configs(model):
