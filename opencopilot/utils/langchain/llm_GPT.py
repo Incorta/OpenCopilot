@@ -1,17 +1,18 @@
 import json
+import langchain
 import opencopilot.utils.logger as logger
-from opencopilot.configs import LLM_Configurations
+from opencopilot.configs.LLM_Configurations import LLMConfigurations
 from opencopilot.configs.constants import GPT3_ENGINE, GPT4_ENGINE
 from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
-from langchain.llms import AzureOpenAI
-from langchain import OpenAI
 from opencopilot.utils.open_ai import common
+
+llm_configs = None
 
 
 def initialize_configurations():
     global llm_configs
-    llm_configs = LLM_Configurations.get_configs()
+    llm_configs = LLMConfigurations.execute_callback()
 
 
 def extract_json_block(text):
@@ -33,20 +34,19 @@ def extract_json_block(text):
 
 
 def run(messages, llm_names):
-    global llm
+    llm = None
     model = None
-
     # Select the first found configured model
     for llm_model in llm_names:
         if llm_model in llm_configs:
             model = llm_model
             break
 
-    engine = GPT3_ENGINE if "GPT3" in model else GPT4_ENGINE
-
     if model is None:
         raise UnsupportedAIProviderException("Didn't find configurations of any of the desired models, "
                                              "Please set the configuration of the desired model in the env!")
+
+    engine = GPT3_ENGINE if "GPT3" in model else GPT4_ENGINE
 
     logger.system_message(str("Calling LLM-" + model + " with: \n"))
     logger.operator_input(messages)
@@ -55,7 +55,7 @@ def run(messages, llm_names):
         return common.get_gpt_human_input(messages)
 
     if "AZURE" in model:
-        llm = AzureOpenAI(
+        llm = langchain.llms.AzureOpenAI(
             model_name=llm_configs[model]["api_deployment_name"],
             openai_api_key=llm_configs[model]["api_key"],
             api_version=llm_configs[model]["api_deployment_version"],
@@ -65,7 +65,7 @@ def run(messages, llm_names):
             temperature=0
         )
     elif "OPEN_AI" in model:
-        llm = OpenAI(
+        llm = langchain.llms.OpenAI(
             openai_api_key=llm_configs[model]["api_key"],
             engine=engine,
             temperature=0
