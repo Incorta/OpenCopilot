@@ -13,3 +13,6 @@ class IllegalArgumentException(Exception):
 class UnauthorizedUserException(Exception):
     pass
 
+
+class UnsupportedAIProviderException(Exception):
+    pass

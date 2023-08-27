@@ -14,9 +14,11 @@ The best way to start using OpenCopilot is to run the main example. The main exa
 Make sure you have `Docker` and `Docker-Compose` installed on your machine.
 
 ### Step 2 : OpenAI Key:
-| Note: OpenCopilot is only supported for ChatGPT-4 for the time being
+Note: You can use any llm model from the following AI Providers [Azure, OPENAI], See template json files
 
-- Set the Key env variable: Make sure you you have OPENAI_API_KEY set in system environments. Check [Adding OpenAI OPENAI_API_KEY to system environments](https://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety)
+- Set the models you want to use by adding the configurations of each model in the llm_copilot_configurations.json file and llm_embedding_configurations.json.
+- Supported copilot models names ["OPEN_AI_GPT3", "OPEN_AI_GPT4", "AZURE_OPEN_AI_GPT3" , "AZURE_OPEN_AI_GPT4"]
+- Supported embedding models names ["Text-embedding-ada-002"]
 
 ### Step 3 : Run the container
 

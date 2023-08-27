@@ -1,3 +1,5 @@
+from enum import Enum
+
 # Session Query
 session_query = "session_query"
 session_query_tasks = "tasks"
@@ -21,3 +23,14 @@ SubTasks = "sub-tasks"
 
 DONE = "DONE"
 TODO = "TODO"
+
+GPT3_ENGINE = "gpt35-model"
+GPT4_ENGINE = "gpt4-model"
+
+
+class LLMModelName(Enum):
+    # Maps variables to model names
+    OPENAI_GPT3 = "OPEN_AI_GPT3"
+    OPENAI_GPT4 = "OPEN_AI_GPT4"
+    AZURE_OPENAI_GPT3 = "AZURE_OPEN_AI_GPT3"
+    AZURE_OPENAI_GPT4 = "AZURE_OPEN_AI_GPT4"
