@@ -10,7 +10,7 @@ class PostgresLLMConfigurations(LLMConfigurations):
 
     @staticmethod
     def retrieve_configs_from_file():
-        with open('service/configurations/llm_copilot_configuration.json', 'r') as config_file:
+        with open('service/configs/llm_copilot_configuration.json', 'r') as config_file:
             return json.load(config_file)
 
 

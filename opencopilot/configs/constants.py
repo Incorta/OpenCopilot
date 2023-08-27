@@ -24,13 +24,10 @@ SubTasks = "sub-tasks"
 DONE = "DONE"
 TODO = "TODO"
 
-GPT3_ENGINE = "gpt35-model"
-GPT4_ENGINE = "gpt4-model"
-
 
 class LLMModelName(Enum):
     # Maps variables to model names
-    OPENAI_GPT3 = "OPEN_AI_GPT3"
-    OPENAI_GPT4 = "OPEN_AI_GPT4"
-    AZURE_OPENAI_GPT3 = "AZURE_OPEN_AI_GPT3"
-    AZURE_OPENAI_GPT4 = "AZURE_OPEN_AI_GPT4"
+    OPENAI_GPT3 = "openai_gpt-3.5-turbo"
+    OPENAI_GPT4 = "openai_gpt-4"
+    AZURE_OPENAI_GPT3 = "azure-openai_gpt-3.5-turbo"
+    AZURE_OPENAI_GPT4 = "azure-openai_gpt-4"

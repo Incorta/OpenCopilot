@@ -4,6 +4,7 @@ import opencopilot.utils.logger as logger
 from opencopilot.configs.LLM_Configurations import LLMConfigurations
 from opencopilot.configs.constants import GPT3_ENGINE, GPT4_ENGINE
 from opencopilot.configs.env import use_human_for_gpt_4
+from opencopilot.utils import network
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
 from opencopilot.utils.open_ai import common
 
@@ -54,24 +55,23 @@ def run(messages, llm_names):
     if use_human_for_gpt_4 and "GPT4" in model:
         return common.get_gpt_human_input(messages)
 
-    if "AZURE" in model:
+    if "azure" in model:
         llm = langchain.llms.AzureOpenAI(
-            model_name=llm_configs[model]["api_deployment_name"],
+            deployment_name=llm_configs[model]["api_deployment_name"],
             openai_api_key=llm_configs[model]["api_key"],
             api_version=llm_configs[model]["api_deployment_version"],
             api_base=llm_configs[model]["api_endpoint"],
             api_type="azure",
-            engine=engine,
             temperature=0
         )
-    elif "OPEN_AI" in model:
+    elif "openai" in model:
         llm = langchain.llms.OpenAI(
             openai_api_key=llm_configs[model]["api_key"],
             engine=engine,
             temperature=0
         )
     else:
-        logger.system_message("Unknown AI Provider!")
+        raise UnsupportedAIProviderException("Unsupported AI Provider")
 
-    llm_reply = llm(str(messages))
+    llm_reply = network.retry(llm(str(messages)))
     return extract_json_block(llm_reply)
