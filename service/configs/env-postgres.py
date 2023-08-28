@@ -2,6 +2,13 @@ import os
 # OPERATORS CONFIGURATIONS
 operators_path = os.getenv("OPERATORS_GROUPS", "YOUR.OPERATOR_GROUPS_PATH.OPERATOR1")
 
+# DATABASE CONFIGURATIONS
+db_host = "database"
+db_name = "ecommerce"
+db_user = "root"
+db_password = "root"
+db_port = "5432"
+
 use_callback = True
 test_env = os.getenv("TEST_ENVIRONMENT", "")
 # EMBEDDING CREDENTIALS

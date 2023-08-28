@@ -16,9 +16,9 @@ Make sure you have `Docker` and `Docker-Compose` installed on your machine.
 ### Step 2 : OpenAI Key:
 Note: You can use any llm model from the following AI Providers [Azure, OPENAI], See template json files
 
-- Set the models you want to use by adding the configurations of each model in the llm_copilot_configurations.json file and llm_embedding_configurations.json.
-- Supported copilot models names ["OPEN_AI_GPT3", "OPEN_AI_GPT4", "AZURE_OPEN_AI_GPT3" , "AZURE_OPEN_AI_GPT4"]
-- Supported embedding models names ["Text-embedding-ada-002"]
+- Set the models you want to use by adding the configurations of each model in the llm_copilot_configurations.json file.
+- Supported copilot models names ["openai_gpt-3.5-turbo", "openai_gpt-4", "azure-openai_gpt-3.5-turbo" , "azure-openai_gpt-4"]
+- Supported embedding models names ["openai_text-embedding-ada-002", "azure-openai_text-embedding-ada-002"]
 
 ### Step 3 : Run the container
 

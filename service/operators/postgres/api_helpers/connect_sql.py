@@ -1,4 +1,4 @@
-import configs
+import opencopilot.configs.env as configs
 import datetime
 import psycopg2
 
