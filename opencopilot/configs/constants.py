@@ -27,7 +27,7 @@ TODO = "TODO"
 
 class LLMModelName(Enum):
     # Maps variables to model names
-    OPENAI_GPT3 = "openai_gpt-3.5-turbo"
-    OPENAI_GPT4 = "openai_gpt-4"
-    AZURE_OPENAI_GPT3 = "azure-openai_gpt-3.5-turbo"
-    AZURE_OPENAI_GPT4 = "azure-openai_gpt-4"
+    openai_gpt_35_turbo = "openai_gpt-3.5-turbo"
+    openai_gpt_4 = "openai_gpt-4"
+    azure_openai_gpt_35_turbo = "azure-openai_gpt-3.5-turbo"
+    azure_openai_gpt_4 = "azure-openai_gpt-4"

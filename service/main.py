@@ -12,7 +12,7 @@ from controller.predefined_query_handler import create_user_query_tuple
 from service.configs import Postgres_LLM_Configurations
 
 app = FastAPI()
-Postgres_LLM_Configurations.register_gpt_configurations_callback()
+Postgres_LLM_Configurations.register_postgres_gpt_configurations()
 
 # WARNING: Not a production code, because CORS of null is a security hole, remove before production
 app.add_middleware(

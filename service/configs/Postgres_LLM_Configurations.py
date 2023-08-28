@@ -14,6 +14,6 @@ class PostgresLLMConfigurations(LLMConfigurations):
             return json.load(config_file)
 
 
-def register_gpt_configurations_callback():
-    LLMConfigurations.register_callback(PostgresLLMConfigurations.get_configurations)
+def register_postgres_gpt_configurations():
+    LLMConfigurations.register(PostgresLLMConfigurations.get_configurations)
     llm_GPT.initialize_configurations()

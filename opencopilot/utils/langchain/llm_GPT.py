@@ -1,19 +1,18 @@
 import json
-import langchain
+import langchain.llms as llms
 import opencopilot.utils.logger as logger
 from opencopilot.configs.LLM_Configurations import LLMConfigurations
-from opencopilot.configs.constants import GPT3_ENGINE, GPT4_ENGINE
 from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils import network
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
 from opencopilot.utils.open_ai import common
-
+from opencopilot.configs.constants import LLMModelName
 llm_configs = None
 
 
 def initialize_configurations():
     global llm_configs
-    llm_configs = LLMConfigurations.execute_callback()
+    llm_configs = LLMConfigurations.execute()
 
 
 def extract_json_block(text):
@@ -47,31 +46,35 @@ def run(messages, llm_names):
         raise UnsupportedAIProviderException("Didn't find configurations of any of the desired models, "
                                              "Please set the configuration of the desired model in the env!")
 
-    engine = GPT3_ENGINE if "GPT3" in model else GPT4_ENGINE
-
     logger.system_message(str("Calling LLM-" + model + " with: \n"))
     logger.operator_input(messages)
 
-    if use_human_for_gpt_4 and "GPT4" in model:
+    if use_human_for_gpt_4 and "gpt-4" in model:
         return common.get_gpt_human_input(messages)
 
-    if "azure" in model:
-        llm = langchain.llms.AzureOpenAI(
-            deployment_name=llm_configs[model]["api_deployment_name"],
+    llm = get_llm(model)
+    llm_reply = network.retry(
+        lambda: llm(str(messages))
+    )
+    return extract_json_block(llm_reply)
+
+
+def get_llm(model):
+    if model == LLMModelName.azure_openai_gpt_4.value or model == LLMModelName.azure_openai_gpt_35_turbo.value:
+        return llms.AzureOpenAI(
+            model_name=llm_configs[model]["api_deployment_name"],
             openai_api_key=llm_configs[model]["api_key"],
             api_version=llm_configs[model]["api_deployment_version"],
             api_base=llm_configs[model]["api_endpoint"],
             api_type="azure",
+            engine=llm_configs[model]["engine"],
             temperature=0
         )
-    elif "openai" in model:
-        llm = langchain.llms.OpenAI(
+    elif model == LLMModelName.openai_gpt_4.value or model == LLMModelName.openai_gpt_35_turbo.value:
+        return llms.OpenAI(
             openai_api_key=llm_configs[model]["api_key"],
-            engine=engine,
+            engine=llm_configs[model]["engine"],
             temperature=0
         )
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
-
-    llm_reply = network.retry(llm(str(messages)))
-    return extract_json_block(llm_reply)

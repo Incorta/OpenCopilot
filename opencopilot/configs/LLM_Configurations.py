@@ -8,12 +8,12 @@ class LLMConfigurations(ABC):
         pass
 
     @classmethod
-    def register_callback(cls, cb):
+    def register(cls, cb):
         global callback
         callback = cb
 
     @classmethod
-    def execute_callback(cls):
+    def execute(cls):
         if callback is not None:
             return callback()
         else:
