@@ -5,13 +5,14 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sse_starlette.sse import EventSourceResponse
-
 from opencopilot.configs import constants
 from controller import receive_and_route_user_request
 from controller import session_handler
 from controller.predefined_query_handler import create_user_query_tuple
+from service.configs import Postgres_LLM_Configurations
 
 app = FastAPI()
+Postgres_LLM_Configurations.register_postgres_gpt_configurations()
 
 # WARNING: Not a production code, because CORS of null is a security hole, remove before production
 app.add_middleware(

@@ -7,9 +7,11 @@ from opencopilot.handlers.executor import gpt_task_processor
 from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
 from opencopilot.utils.exceptions import UnknownCommandError
-from opencopilot.utils.open_ai import completion_4, completion_3_5
+from opencopilot.utils.langchain import llm_GPT
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
+planner_llm_models_list = [constants.LLMModelName.azure_openai_gpt_4.value, constants.LLMModelName.openai_gpt_4.value,
+                           constants.LLMModelName.azure_openai_gpt_35_turbo.value, constants.LLMModelName.openai_gpt_35_turbo.value]
 
 
 def get_next_todo_task_index(tasks_list):
@@ -44,7 +46,6 @@ def list_operators():
 
 
 def plan_level_0(user_objective, user_session, session_query):
-    
     # Construct planner request
     planner_messages = []
     template_path = "resources/planner_level0_prompt.txt"
@@ -66,7 +67,7 @@ def plan_level_0(user_objective, user_session, session_query):
     if cached_level0_plan_response is not None:
         planned_tasks = cached_level0_plan_response
     else:
-        planned_tasks = json.loads(completion_4.run(planner_messages))
+        planned_tasks = json.loads(llm_GPT.run(planner_messages, planner_llm_models_list))
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 
     # Parse tasks
@@ -92,9 +93,10 @@ def plan_level_1(query_str, tasks):
 
         prompt_text = gpt_task_processor.get_command_prompt_from_task(query_str, tasks, i, "PLANNER")
 
-        json_str = completion_3_5.run([
+        json_str = llm_GPT.run([
             {"role": "system", "content": prompt_text},
-            {"role": "assistant", "content": "JSON:\n"}])
+            {"role": "assistant", "content": "JSON:\n"}],
+            planner_llm_models_list)
 
         planned_tasks = json.loads(json_str)
 

@@ -1,0 +1,14 @@
+{
+    "Azure-OpenAI-GPT4": {
+      "api_key": <KEY>,
+      "api_deployment_version": <VERSION>,
+      "api_endpoint": <ENDPOINT_URL>,
+      "api_deployment_name": "gpt-4"
+  },
+  "Azure-OpenAI-GPT3.5": {
+      "api_key": <KEY>,
+      "api_deployment_version":<VERSION>,
+      "api_endpoint": <ENDPOINT_URL>,
+      "api_deployment_name": "gpt-3.5-turbo"
+  }
+}
