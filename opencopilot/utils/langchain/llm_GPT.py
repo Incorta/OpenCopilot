@@ -60,25 +60,20 @@ def run(messages, llm_names):
 
 
 def get_llm(model):
-    if LLMModelName.azure_openai_gpt_4.value:
-        engine = "gpt4-model"
-    else:
-        engine = "gpt35-model"
-
     if model == LLMModelName.azure_openai_gpt_4.value or model == LLMModelName.azure_openai_gpt_35_turbo.value:
         return llms.AzureOpenAI(
-            model_name=llm_configs[model]["api_deployment_name"],
-            openai_api_key=llm_configs[model]["api_key"],
-            api_version=llm_configs[model]["api_deployment_version"],
-            api_base=llm_configs[model]["api_endpoint"],
+            model_name=llm_configs[model]["API Deployment Name"],
+            openai_api_key=llm_configs[model]["API Key"],
+            api_version=llm_configs[model]["API Deployment Version"],
+            api_base=llm_configs[model]["API Endpoint"],
             api_type="azure",
-            engine=engine,
+            engine="gpt4-model" if model == LLMModelName.azure_openai_gpt_4.value else "gpt35-model",
             temperature=0
         )
     elif model == LLMModelName.openai_gpt_4.value or model == LLMModelName.openai_gpt_35_turbo.value:
         return llms.OpenAI(
-            openai_api_key=llm_configs[model]["api_key"],
-            engine=llm_configs[model]["engine"],
+            openai_api_key=llm_configs[model]["API Key"],
+            engine="gpt4-model" if model == LLMModelName.azure_openai_gpt_4.value else "gpt35-model",
             temperature=0
         )
     else:
