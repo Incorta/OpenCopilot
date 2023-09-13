@@ -48,7 +48,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
     else:
         raise UnknownCommandError(f"Unknown target: {target}")
 
-    tasks_subset = tasks[:tasks_count].copy()
+    tasks_subset = copy.deepcopy(tasks[:tasks_count])
     formulated_tasks = formulate_tasks(
         tasks_subset, task["depends_on_output_of"], task_index)
 
