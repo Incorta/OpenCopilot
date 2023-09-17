@@ -62,18 +62,19 @@ def run(messages, llm_names):
 def get_llm(model):
     if model == LLMModelName.azure_openai_gpt_4.value or model == LLMModelName.azure_openai_gpt_35_turbo.value:
         return llms.AzureOpenAI(
-            model_name=llm_configs[model]["api_deployment_name"],
+            model_name="gpt-4" if model == LLMModelName.azure_openai_gpt_4.value else "gpt-3.5-turbo",
             openai_api_key=llm_configs[model]["api_key"],
             api_version=llm_configs[model]["api_deployment_version"],
             api_base=llm_configs[model]["api_endpoint"],
             api_type="azure",
-            engine=llm_configs[model]["engine"],
+            engine=llm_configs[model]["api_deployment_name"],
+
             temperature=0
         )
     elif model == LLMModelName.openai_gpt_4.value or model == LLMModelName.openai_gpt_35_turbo.value:
         return llms.OpenAI(
             openai_api_key=llm_configs[model]["api_key"],
-            engine=llm_configs[model]["engine"],
+            engine=llm_configs[model]["api_deployment_name"],
             temperature=0
         )
     else:
