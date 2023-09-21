@@ -12,12 +12,21 @@ operators_handler_module = importlib.import_module(
     operators_path + ".operators_handler")
 
 
+def formulate_tasks(tasks, dependencies, task_index):
+    for i, _ in enumerate(tasks):
+        if tasks[i]["id"] not in dependencies and i != task_index:
+            result = str(tasks[i]["result"])
+            tasks[i]["result"] = "".join(result.split()[:5]) + "..."
+    return tasks
+
+
 def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
     task = tasks[task_index]
 
     # Check that the task's operator exists in the operators' group op_functions and get its command help
     if task[constants.Operator] in operators_handler_module.op_functions:
-        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"]()
+        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"](
+        )
         commands_help["overview"] = operators_handler_module.op_functions[task[constants.Operator]]["description"]
     else:
         raise exceptions.UnknownCommandError(
@@ -39,9 +48,13 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
     else:
         raise UnknownCommandError(f"Unknown target: {target}")
 
+    tasks_subset = copy.deepcopy(tasks[:tasks_count])
+    formulated_tasks = formulate_tasks(
+        tasks_subset, task["depends_on_output_of"], task_index)
+
     prompt_text = jinja_utils.load_template(template_path, {
         "query_str": query_str,
-        "tasks": json.dumps(tasks[:tasks_count], indent=2),
+        "tasks": json.dumps(formulated_tasks, indent=2),
         "curTaskId": task["id"],
         "commands_overview": commands_help["overview"],
         "commands": commands_help["commands"],
@@ -66,7 +79,8 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
 
     # -- Get command
     command = None
-    cached_operator_command = session_entry.get_cached_agent_communications_operator_command(task_index, messages)
+    cached_operator_command = session_entry.get_cached_agent_communications_operator_command(
+        task_index, messages)
 
     if cached_operator_command is not None:
         command = cached_operator_command
@@ -74,9 +88,10 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     if command is None:
         chat_gpt_response = llm_GPT.run(
             messages,
-            operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"]
+            operators_handler_module.op_functions[tasks[task_index]
+                                                  ["operator"]]["preferred_LLM"]
         )
-        
+
         command = json.loads(chat_gpt_response)
 
     logger.system_message("Got Command, will execute it:")
@@ -86,4 +101,3 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
         command = command[0]
 
     return command
-
