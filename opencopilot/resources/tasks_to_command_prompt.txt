@@ -21,6 +21,8 @@ Command {{ loop.index }} JSON Format:
 Now, given the list of possible commands, and the list of tasks, generate the command for Task_id: {{ curTaskId }}
 {% endif %}
 
+Notice that the result of any operator/task name that starts with UI can be read by the user, while the result of any other operator/task can not be shown to the user and its result is an intermediate result for other dependent tasks. 
+
 Ensure the response can be parsed by Python json.loads.
 
 Command ==> JSON:
