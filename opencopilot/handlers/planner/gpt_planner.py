@@ -63,11 +63,13 @@ def plan_level_0(user_objective, user_session, session_query):
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response
+    consumption_tracking = None
     cached_level0_plan_response = session_query.get_cached_agent_communications_planner_response(planner_messages)
     if cached_level0_plan_response is not None:
         planned_tasks = cached_level0_plan_response
     else:
-        planned_tasks = json.loads(llm_GPT.run(planner_messages, planner_llm_models_list))
+        planned_tasks, consumption_tracking = llm_GPT.run(planner_messages, planner_llm_models_list)
+        planned_tasks = json.loads(planned_tasks)
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 
     # Parse tasks
@@ -81,7 +83,7 @@ def plan_level_0(user_objective, user_session, session_query):
     logger.system_message("Got the following plan from the planning agent:")
     logger.print_tasks(tasks)
 
-    return tasks
+    return tasks, consumption_tracking
 
 
 def plan_level_1(query_str, tasks):

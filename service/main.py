@@ -63,7 +63,7 @@ async def handle_async_query(request: Request):
     async def generate_events():
         last_session_query = None
         async for result in receive_and_route_user_request.async_run_planning_loop(user_query_obj, session):
-            yield {"data": json.dumps(result[constants.session_query_tasks], indent=2)}
+            yield {"data": json.dumps(result[constants.session_query_tasks])}
             last_tasks_update = result[constants.session_query_tasks]
             last_session_query = result[constants.session_query]
             last_session_query.set_tasks(last_tasks_update)
