@@ -66,7 +66,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
     return prompt_text
 
 
-def get_command_from_task(query_str, tasks, task_index, session_entry):
+def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker):
 
     # -- Build request
     prompt_text = get_command_prompt_from_task(
@@ -92,6 +92,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
         )
 
         command = json.loads(chat_gpt_response)
+    consumption_tracker.add_executor_consumption(consumption_tracking)
 
     logger.system_message("Got Command, will execute it:")
     logger.operator_response(json.dumps(command))
@@ -99,4 +100,4 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
     if isinstance(command, list) and len(command) > 0:  # Sometimes it would come as an array
         command = command[0]
 
-    return command, consumption_tracking
+    return command

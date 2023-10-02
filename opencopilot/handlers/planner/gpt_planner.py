@@ -2,7 +2,7 @@ import copy
 import json
 import importlib
 import opencopilot.utils.logger as logger
-from opencopilot.configs import env, constants
+from opencopilot.configs import constants
 from opencopilot.handlers.executor import gpt_task_processor
 from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
@@ -45,7 +45,7 @@ def list_operators():
     return [str(key) for key in operators_handler_module.op_functions.keys()]
 
 
-def plan_level_0(user_objective, user_session, session_query):
+def plan_level_0(user_objective, user_session, session_query, consumption_tracker):
     # Construct planner request
     planner_messages = []
     template_path = "resources/planner_level0_prompt.txt"
@@ -70,6 +70,9 @@ def plan_level_0(user_objective, user_session, session_query):
     else:
         planned_tasks, consumption_tracking = llm_GPT.run(planner_messages, planner_llm_models_list)
         planned_tasks = json.loads(planned_tasks)
+
+    consumption_tracker.set_planner_consumption(consumption_tracking)
+
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 
     # Parse tasks
@@ -83,7 +86,7 @@ def plan_level_0(user_objective, user_session, session_query):
     logger.system_message("Got the following plan from the planning agent:")
     logger.print_tasks(tasks)
 
-    return tasks, consumption_tracking
+    return tasks
 
 
 def plan_level_1(query_str, tasks):

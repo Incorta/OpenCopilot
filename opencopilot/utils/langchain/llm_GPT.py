@@ -4,6 +4,7 @@ import opencopilot.utils.logger as logger
 from opencopilot.configs.LLM_Configurations import LLMConfigurations
 from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils import network
+from opencopilot.utils.consumption_tracker import ConsumptionTracker
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
 from opencopilot.utils.open_ai import common
 from opencopilot.configs.constants import LLMModelName
@@ -58,14 +59,7 @@ def run(messages, llm_names):
     with get_openai_callback() as cb:
         llm_reply = network.retry(lambda: llm(str(messages)))
         print(cb)
-        consumption_tracking = {
-            "model_name": llm.model_name,
-            "total_tokens": cb.total_tokens,
-            "prompt_tokens": cb.prompt_tokens,
-            "completion_tokens": cb.completion_tokens,
-            "successful_requests": cb.successful_requests,
-            "total_cost": cb.total_cost
-        }
+        consumption_tracking = ConsumptionTracker.create_consumption_unit(llm.model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
     return extract_json_block(llm_reply), consumption_tracking
 
