@@ -71,7 +71,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
         planned_tasks, consumption_tracking = llm_GPT.run(planner_messages, planner_llm_models_list)
         planned_tasks = json.loads(planned_tasks)
 
-    consumption_tracker.set_planner_consumption(consumption_tracking)
+    consumption_tracker.set_planner_consumption(consumption_tracking, "level 0")
 
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 

@@ -92,7 +92,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry, consumpti
         )
 
         command = json.loads(chat_gpt_response)
-    consumption_tracker.add_executor_consumption(consumption_tracking)
+    consumption_tracker.add_executor_consumption(consumption_tracking, operators_handler_module.op_functions[tasks[task_index]["operator"]]["operator_name"])
 
     logger.system_message("Got Command, will execute it:")
     logger.operator_response(json.dumps(command))
