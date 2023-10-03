@@ -58,7 +58,7 @@ def print_colored(message, color):
 def print_tasks(tasks_json_array):
     for task in tasks_json_array:
         color = COLOR_YELLOW if task["status"] == "TODO" else COLOR_GREEN
-        print_colored(json.dumps(task, indent=4), color)
+        print_colored(json.dumps(task), color)
 
 
 def print_gpt_messages(messages):

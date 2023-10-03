@@ -54,7 +54,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
 
     prompt_text = jinja_utils.load_template(template_path, {
         "query_str": query_str,
-        "tasks": json.dumps(formulated_tasks, indent=2),
+        "tasks": tasks[:tasks_count],
         "curTaskId": task["id"],
         "commands_overview": commands_help["overview"],
         "commands": commands_help["commands"],
@@ -66,7 +66,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
     return prompt_text
 
 
-def get_command_from_task(query_str, tasks, task_index, session_entry):
+def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker):
 
     # -- Build request
     prompt_text = get_command_prompt_from_task(
@@ -79,20 +79,20 @@ def get_command_from_task(query_str, tasks, task_index, session_entry):
 
     # -- Get command
     command = None
-    cached_operator_command = session_entry.get_cached_agent_communications_operator_command(
-        task_index, messages)
+    cached_operator_command = session_entry.get_cached_agent_communications_operator_command(task_index, messages)
 
     if cached_operator_command is not None:
         command = cached_operator_command
 
+    consumption_tracking = None
     if command is None:
-        chat_gpt_response = llm_GPT.run(
+        chat_gpt_response, consumption_tracking = llm_GPT.run(
             messages,
-            operators_handler_module.op_functions[tasks[task_index]
-                                                  ["operator"]]["preferred_LLM"]
+            operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"]
         )
 
         command = json.loads(chat_gpt_response)
+    consumption_tracker.add_executor_consumption(consumption_tracking, operators_handler_module.op_functions[tasks[task_index]["operator"]]["operator_name"])
 
     logger.system_message("Got Command, will execute it:")
     logger.operator_response(json.dumps(command))
