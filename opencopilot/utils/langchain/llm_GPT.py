@@ -1,5 +1,11 @@
 import json
-import langchain.llms as llms
+from langchain.chat_models import ChatOpenAI
+from langchain.chat_models import AzureChatOpenAI
+from langchain.schema import (
+    AIMessage,
+    HumanMessage,
+    SystemMessage
+)
 import opencopilot.utils.logger as logger
 from opencopilot.configs.LLM_Configurations import LLMConfigurations
 from opencopilot.configs.env import use_human_for_gpt_4
@@ -28,7 +34,13 @@ def extract_json_block(text):
         json_block_text = text[start_index:end_index + 1]
 
         # Parse the JSON block into a Python dictionary
-        json_block_dict = json.loads(json_block_text)
+        try:
+            json_block_dict = json.loads(json_block_text)
+        except json.JSONDecodeError as e:
+            print("Error parsing JSON:")
+            print(json_block_text)
+            print("Exception:", str(e))
+            raise APIFailureException("Error parsing JSON.")
 
         # Print the extracted JSON block
         return json.dumps(json_block_dict, indent=4)
@@ -56,29 +68,41 @@ def run(messages, llm_names):
         return common.get_gpt_human_input(messages)
 
     llm = get_llm(model)
+
+    # Convert messages object to langchain messages model - TODO: it is better to use those objects from the beginning
+    langchain_messages = []
+    for message in messages:
+        content = message["content"]
+        if message["role"] == "system":
+            langchain_messages.append(SystemMessage(content=content))
+        elif message["role"] == "user":
+            langchain_messages.append(HumanMessage(content=content))
+        elif message["role"] == "assistant":
+            langchain_messages.append(AIMessage(content=content))
+
     with get_openai_callback() as cb:
-        llm_reply = network.retry(lambda: llm(str(messages)))
+        llm_reply = network.retry(lambda: llm(langchain_messages))
         print(cb)
         consumption_tracking = ConsumptionTracker.create_consumption_unit(llm.model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
-    return extract_json_block(llm_reply), consumption_tracking
+    llm_reply_text = llm_reply.content
+    return extract_json_block(llm_reply_text), consumption_tracking
 
 
 def get_llm(model):
     if model == LLMModelName.azure_openai_gpt_4.value or model == LLMModelName.azure_openai_gpt_35_turbo.value:
-        return llms.AzureOpenAI(
-            model_name="gpt-4" if model == LLMModelName.azure_openai_gpt_4.value else "gpt-3.5-turbo", # Model name maps to the model to be used in this specific Azure deployment
+        return AzureChatOpenAI(
             openai_api_key=llm_configs[model]["api_key"],
-            api_version=llm_configs[model]["api_deployment_version"],
-            api_base=llm_configs[model]["api_endpoint"],
-            api_type="azure",
-            engine=llm_configs[model]["api_deployment_name"], # Engine maps to the deployment name in Azure.
+            openai_api_version=llm_configs[model]["api_deployment_version"],
+            openai_api_base=llm_configs[model]["api_endpoint"],
+            deployment_name=llm_configs[model]["api_deployment_name"], # Engine maps to the deployment name in Azure.
+            model_name="gpt-4" if model == LLMModelName.azure_openai_gpt_4.value else "gpt-3.5-turbo", # Model name maps to the model to be used in this specific Azure deployment
             temperature=0
         )
     elif model == LLMModelName.openai_gpt_4.value or model == LLMModelName.openai_gpt_35_turbo.value:
-        return llms.OpenAI(
+        return ChatOpenAI(
             openai_api_key=llm_configs[model]["api_key"],
-            engine="gpt-4" if model == LLMModelName.openai_gpt_4.value else "gpt-3.5-turbo", # Engine in OPENAI maps to a specific model to be used.
+            model_name="gpt-4" if model == LLMModelName.openai_gpt_4.value else "gpt-3.5-turbo", # Engine in OPENAI maps to a specific model to be used.
             temperature=0
         )
     else:

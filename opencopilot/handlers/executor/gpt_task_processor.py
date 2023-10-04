@@ -72,7 +72,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry, consumpti
     prompt_text = get_command_prompt_from_task(
         query_str, tasks, task_index, "EXECUTOR")
     logger.system_message("Creating command from task description")
-    messages = [{"role": "system", "content": prompt_text}]
+    messages = [{"role": "user", "content": prompt_text}]
     logger.print_gpt_messages(messages)
     session_entry.set_pending_agent_communications(
         component=task_index, sub_component="request", value=copy.deepcopy(messages))
