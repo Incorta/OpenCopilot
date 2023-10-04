@@ -54,7 +54,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER")
 
     prompt_text = jinja_utils.load_template(template_path, {
         "query_str": query_str,
-        "tasks": tasks[:tasks_count],
+        "tasks": json.dumps(formulated_tasks),
         "curTaskId": task["id"],
         "commands_overview": commands_help["overview"],
         "commands": commands_help["commands"],
