@@ -31,18 +31,21 @@ def summarize_session_queries(user_session):
     } for query in user_session.queries_list]
 
 
-def get_operators_descriptions():
+def get_operators_info(client):
+    if client is not None:
+        operators = operators_handler_module.op_functions_resolver(client)
+        operators_keys = operators
+    else:
+        operators = operators_handler_module.op_functions
+        operators_keys = [str(key) for key in operators_handler_module.op_functions.keys()]
+
     operators_descriptions_str = ""
-    for operator in operators_handler_module.op_functions:
+    for operator in operators:
         operators_descriptions_str += (
                 "- " + operators_handler_module.op_functions[operator]["operator_name"] + " --> "
                 + "(" + operator + ") " + operators_handler_module.op_functions[operator]["description"] + "\n")
 
-    return operators_descriptions_str
-
-
-def list_operators():
-    return [str(key) for key in operators_handler_module.op_functions.keys()]
+    return operators_keys, operators_descriptions_str
 
 
 def plan_level_0(user_objective, user_session, session_query, consumption_tracker):
@@ -51,11 +54,19 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     template_path = "resources/planner_level0_prompt.txt"
     session_summary = summarize_session_queries(user_session)
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
+
+    context_client = None
+    try:
+        context_client = session_query.get_context().get_client()
+    except AttributeError:
+        print("Context client isn't provided!")
+
+    operators_names, operators_descriptions_str = get_operators_info(context_client)
     prompt_text = jinja_utils.load_template(template_path, {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.group_name,
-        "op_descriptions": get_operators_descriptions(),
-        "operators": list_operators()
+        "op_descriptions": operators_descriptions_str,
+        "operators": operators_names
     })
     planner_messages.append({"role": "system", "content": prompt_text})
     planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
