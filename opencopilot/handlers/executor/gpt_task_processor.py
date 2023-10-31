@@ -20,13 +20,13 @@ def formulate_tasks(tasks, dependencies, task_index):
     return tasks
 
 
-def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER"):
+def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER", session_query=None):
     task = tasks[task_index]
 
     # Check that the task's operator exists in the operators' group op_functions and get its command help
     if task[constants.Operator] in operators_handler_module.op_functions:
         commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"](
-        )
+            session_query)
         commands_help["overview"] = operators_handler_module.op_functions[task[constants.Operator]]["description"]
     else:
         raise exceptions.UnknownCommandError(
@@ -70,7 +70,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry, consumpti
 
     # -- Build request
     prompt_text = get_command_prompt_from_task(
-        query_str, tasks, task_index, "EXECUTOR")
+        query_str, tasks, task_index, "EXECUTOR", session_entry)
     logger.system_message("Creating command from task description")
     messages = [{"role": "user", "content": prompt_text}]
     logger.print_gpt_messages(messages)
@@ -79,7 +79,8 @@ def get_command_from_task(query_str, tasks, task_index, session_entry, consumpti
 
     # -- Get command
     command = None
-    cached_operator_command = session_entry.get_cached_agent_communications_operator_command(task_index, messages)
+    cached_operator_command = session_entry.get_cached_agent_communications_operator_command(
+        task_index, messages)
 
     if cached_operator_command is not None:
         command = cached_operator_command
@@ -88,11 +89,13 @@ def get_command_from_task(query_str, tasks, task_index, session_entry, consumpti
     if command is None:
         chat_gpt_response, consumption_tracking = llm_GPT.run(
             messages,
-            operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"]
+            operators_handler_module.op_functions[tasks[task_index]
+                                                  ["operator"]]["preferred_LLM"]
         )
 
         command = json.loads(chat_gpt_response)
-    consumption_tracker.add_executor_consumption(consumption_tracking, operators_handler_module.op_functions[tasks[task_index]["operator"]]["operator_name"])
+    consumption_tracker.add_executor_consumption(
+        consumption_tracking, operators_handler_module.op_functions[tasks[task_index]["operator"]]["operator_name"])
 
     logger.system_message("Got Command, will execute it:")
     logger.operator_response(json.dumps(command))
