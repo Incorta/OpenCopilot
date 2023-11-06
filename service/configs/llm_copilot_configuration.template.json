@@ -1,20 +1,20 @@
 {
-    "azure-openai_gpt-4": {
-      "api_key": <KEY>,
-      "api_deployment_version": <VERSION>,
-      "api_endpoint": <ENDPOINT_URL>,
-      "api_deployment_name": <DEPLOYMENT_NAME>
+  "primary_model":{
+    "ai_provider":"azure_openai",
+    "azure_openai_text_completion_endpoint":<ENDPOINT_URL>,
+    "azure_openai_text_completion_token":<KEY>,
+    "azure_openai_text_completion_deployment_name":<DEPLOYMENT_NAME>,
+    "azure_openai_embedding_endpoint":<EMBEDDING_ENDPOINT_URL>,
+    "azure_openai_embedding_token":<EMBEDDING_KEY>,
+    "azure_openai_embedding_deployment_name":<EMBEDDING_DEPLOYMENT_NAME>
   },
-  "azure-openai_gpt-35-turbo": {
-      "api_key": <KEY>,
-      "api_deployment_version":<VERSION>,
-      "api_endpoint": <ENDPOINT_URL>,
-      "api_deployment_name": <DEPLOYMENT_NAME>
-  },
-  "openai_gpt-4": {
-    "api_key": <KEY>
-  },
-  "openai_gpt-35-turbo": {
-    "api_key": <KEY>
+  "secondary_model":{
+    "ai_provider":"openai",
+    "openai_text_completion_token":<KEY>,
+    "openai_text_completion_model_name":<DEPLOYMENT_NAME>
   }
 }
+
+// or use the following embedding properties if you will use openai as the primary model
+"openai_text_completion_token":<EMBEDDING_KEY>,
+"openai_embedding_model_name":<EMBEDDING_DEPLOYMENT_NAME>

@@ -10,8 +10,7 @@ from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
-planner_llm_models_list = [constants.LLMModelName.azure_openai_gpt_4.value, constants.LLMModelName.openai_gpt_4.value,
-                           constants.LLMModelName.azure_openai_gpt_35_turbo.value, constants.LLMModelName.openai_gpt_35_turbo.value]
+planner_llm_models_list = [constants.LLMModelPriority.primary_model.value, constants.LLMModelPriority.secondary_model.value]
 
 
 def get_next_todo_task_index(tasks_list):
