@@ -12,7 +12,7 @@ from opencopilot.utils import network
 from opencopilot.utils.consumption_tracker import ConsumptionTracker
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
 from opencopilot.utils.open_ai import common
-from opencopilot.configs.constants import SupportedAIProviders
+from opencopilot.configs.constants import SupportedAIProviders, LLMModelPriority
 from langchain.callbacks import get_openai_callback
 
 llm_configs = None
@@ -21,6 +21,11 @@ llm_configs = None
 def initialize_configurations():
     global llm_configs
     llm_configs = LLMConfigurations.execute()
+
+
+def update_configurations(key1, value1, key2, value2):
+    llm_configs[LLMModelPriority.primary_model.value][key1] = value1
+    llm_configs[LLMModelPriority.secondary_model.value][key2] = value2
 
 
 def extract_json_block(text):
