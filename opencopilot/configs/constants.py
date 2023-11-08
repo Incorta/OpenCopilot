@@ -31,3 +31,4 @@ class LLMModelName(Enum):
     openai_gpt_4 = "openai_gpt-4"
     azure_openai_gpt_35_turbo = "azure-openai_gpt-35-turbo"
     azure_openai_gpt_4 = "azure-openai_gpt-4"
+    google_palm = "google_palm"

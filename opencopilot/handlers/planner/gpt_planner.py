@@ -10,7 +10,7 @@ from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
-planner_llm_models_list = [constants.LLMModelName.azure_openai_gpt_4.value, constants.LLMModelName.openai_gpt_4.value,
+planner_llm_models_list = [constants.LLMModelName.google_palm.value, constants.LLMModelName.azure_openai_gpt_4.value, constants.LLMModelName.openai_gpt_4.value,
                            constants.LLMModelName.azure_openai_gpt_35_turbo.value, constants.LLMModelName.openai_gpt_35_turbo.value]
 
 
@@ -70,7 +70,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     })
     planner_messages.append({"role": "system", "content": prompt_text})
     planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
-    planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks and one or more UI Operator in JSON:"})
+    planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks in JSON:"})
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response

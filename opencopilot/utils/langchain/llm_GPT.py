@@ -1,6 +1,7 @@
 import json
 from langchain.chat_models import ChatOpenAI
 from langchain.chat_models import AzureChatOpenAI
+from langchain.chat_models import ChatGooglePalm
 from langchain.schema import (
     AIMessage,
     HumanMessage,
@@ -25,27 +26,27 @@ def initialize_configurations():
 
 
 def extract_json_block(text):
-    # Find the first and last curly brace
-    start_index = text.find("{")
-    end_index = text.rfind("}")
-
-    if start_index != -1 and end_index != -1:
-        # Extract the JSON block from the text
-        json_block_text = text[start_index:end_index + 1]
-
-        # Parse the JSON block into a Python dictionary
-        try:
-            json_block_dict = json.loads(json_block_text)
-        except json.JSONDecodeError as e:
-            print("Error parsing JSON:")
-            print(json_block_text)
-            print("Exception:", str(e))
-            raise APIFailureException("Error parsing JSON.")
-
-        # Print the extracted JSON block
-        return json.dumps(json_block_dict, indent=4)
-    else:
-        raise APIFailureException("No JSON block found in the text.")
+    depth = 0
+    start = -1
+    for i, char in enumerate(text):
+        if char == '{':
+            if depth == 0:
+                start = i
+            depth += 1
+        elif char == '}':
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                try:
+                    json_str = text[start:end]
+                    data = json.loads(json_str)
+                    print("##########")
+                    print(json.dumps(data, indent=4))
+                    print("##########")
+                    return json.dumps(data, indent=4)
+                except json.JSONDecodeError:
+                    pass  # Invalid JSON, continue searching
+    return None
 
 
 def run(messages, llm_names):
@@ -103,6 +104,11 @@ def get_llm(model):
         return ChatOpenAI(
             openai_api_key=llm_configs[model]["api_key"],
             model_name="gpt-4" if model == LLMModelName.openai_gpt_4.value else "gpt-3.5-turbo", # Engine in OPENAI maps to a specific model to be used.
+            temperature=0
+        )
+    elif model == LLMModelName.google_palm.value:
+        return ChatGooglePalm(
+            google_api_key=llm_configs[model]["api_key"],
             temperature=0
         )
     else:
