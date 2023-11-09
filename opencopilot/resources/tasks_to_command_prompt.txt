@@ -14,7 +14,7 @@ Commands Overview: {{ commands_overview }}
 {% for command in commands %}
 Command {{ loop.index }} Description: {{ command["command_description"] }}
 Command {{ loop.index }} JSON Format:
-{{ command["command"]|tojson }}
+{{ command["command"]|tojson(indent=2) }}
 {% endfor %}
 
 {% if tasksLength > 0 %}

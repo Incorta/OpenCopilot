@@ -8,8 +8,10 @@ In a previous interactions with the user, you both had the following List of que
 {{ session_summary }}
 {% endif %}
 
-Tasks can be one or more of the following. You should never use a task other than these:
+Tasks can be one or more of the following:
 {{ op_descriptions }}
+
+You should never use a task other than the tasks above which are {{ operators }}. 
 
 You should only respond with tasks in JSON format as described in the following JSON schema:
 {
@@ -24,7 +26,7 @@ You should only respond with tasks in JSON format as described in the following 
                 "status": "For now, status must be the string TODO since tasks are not done yet",
                 "depends_on_output_of": {"type": "array","items": {"type": "integer"},"uniqueItems": true},
                 "detailed_purpose": "Describe the goal and the purpose in details. Include additional context and keywords that could help the incorta Operator find relevant info. If the needed output from the task is only a single result, mention this clearly. The same if a list is needed, mention that also.",
-                "result": "Must be empty for TODO tasks."
+                "result": "Must be empty"
             },
         }
     }

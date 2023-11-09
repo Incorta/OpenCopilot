@@ -1,4 +1,5 @@
 import json
+import traceback
 from langchain.chat_models import ChatOpenAI
 from langchain.chat_models import AzureChatOpenAI
 from langchain.chat_models import ChatGooglePalm
@@ -25,28 +26,54 @@ def initialize_configurations():
     llm_configs = LLMConfigurations.execute()
 
 
+
+import json
+import re
+import traceback
+
 def extract_json_block(text):
-    depth = 0
-    start = -1
-    for i, char in enumerate(text):
-        if char == '{':
-            if depth == 0:
-                start = i
-            depth += 1
-        elif char == '}':
-            depth -= 1
-            if depth == 0:
-                end = i + 1
-                try:
-                    json_str = text[start:end]
-                    data = json.loads(json_str)
-                    print("##########")
-                    print(json.dumps(data, indent=4))
-                    print("##########")
-                    return json.dumps(data, indent=4)
-                except json.JSONDecodeError:
-                    pass  # Invalid JSON, continue searching
-    return None
+    try:
+        # Replace unescaped strings
+        print("before")
+        print(text)
+        unescaped_strings = re.findall(r'"""(.*?)"""', text, re.DOTALL)
+        for unescaped in unescaped_strings:
+            escaped = json.dumps(unescaped)  # This will escape special characters
+            text = text.replace('"""' + unescaped + '"""', escaped)
+        print("after")
+        print(text)    
+
+
+        # Find the first opening brace
+        start_index = text.find('{')
+        if start_index == -1:
+            raise ValueError('No JSON object found in the text')
+
+        # Count braces to find where the JSON object ends
+        brace_count = 0
+        for end_index in range(start_index, len(text)):
+            if text[end_index] == '{':
+                brace_count += 1
+            elif text[end_index] == '}':
+                brace_count -= 1
+
+            if brace_count == 0:  # We've found the end of the JSON object
+                break
+        else:  # No matching closing brace was found
+            raise ValueError('No matching closing brace for JSON object in the text')
+
+        json_str = text[start_index:end_index+1]
+
+        # Try to parse the JSON string into a Python object
+        json_obj = json.loads(json_str)
+
+        return json_str
+    except Exception as e:
+        print("Caught an exception while trying to process the following text:\n")
+        print(text)
+        print("\nException traceback:")
+        traceback.print_exc()
+        raise e
 
 
 def run(messages, llm_names):
