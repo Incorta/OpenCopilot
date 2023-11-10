@@ -57,7 +57,7 @@ def run(messages, llm_names):
     model = None
     # Select the first found configured model
     for llm_model in llm_names:
-        if llm_model in llm_configs:
+        if llm_model in llm_configs and "ai_provider" in llm_configs[llm_model]:
             model = llm_configs[llm_model]
             break
 
