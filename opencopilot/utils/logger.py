@@ -27,6 +27,10 @@ def print_all_colors():
         print(colored(f"Hello world!: {color}", color))
 
 
+def info(message):
+    print(colored(message, COLOR_LIGHT_GREEN))
+
+
 def trace(message):
     print(colored(message, COLOR_YELLOW))
 
