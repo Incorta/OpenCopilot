@@ -23,9 +23,10 @@ def initialize_configurations():
     llm_configs = LLMConfigurations.execute()
 
 
-def update_configurations(key1, value1, key2, value2):
+def update_configurations(key1, value1, key2=None, value2=None):
     llm_configs[LLMModelPriority.primary_model.value][key1] = value1
-    llm_configs[LLMModelPriority.secondary_model.value][key2] = value2
+    if key2 is not None:
+        llm_configs[LLMModelPriority.secondary_model.value][key2] = value2
 
 
 def extract_json_block(text):
