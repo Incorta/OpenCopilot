@@ -30,9 +30,9 @@ def summarize_session_queries(user_session):
     } for query in user_session.queries_list]
 
 
-def get_operators_info(client):
-    if client is not None:
-        operators = operators_handler_module.op_functions_resolver(client)
+def get_operators_info(context):
+    if context is not None:
+        operators = operators_handler_module.op_functions_resolver(context)
         operators_keys = operators
     else:
         operators = operators_handler_module.op_functions
@@ -54,13 +54,13 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     session_summary = summarize_session_queries(user_session)
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
 
-    context_client = None
+    context = None
     try:
-        context_client = session_query.get_context().get_client()
+        context = session_query.get_context()
     except AttributeError:
-        print("Context client isn't provided!")
+        print("Context isn't provided!")
 
-    operators_names, operators_descriptions_str = get_operators_info(context_client)
+    operators_names, operators_descriptions_str = get_operators_info(context)
     prompt_text = jinja_utils.load_template(template_path, {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.group_name,
