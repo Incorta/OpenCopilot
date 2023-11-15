@@ -23,12 +23,75 @@ def get_next_todo_task_index(tasks_list):
     return -1
 
 
-def summarize_session_queries(user_session):
-    return [{
-        constants.session_query_tasks: query.get_tasks(),
-        constants.session_query_user_query_msg: query.get_user_query_msg()
-    } for query in user_session.queries_list]
+def summarize_session_queries(user_session, max_history_size=2000):
+    """
+    This function generates a summary of a user's session queries.
+    
+    The summary is represented as a list of dictionaries, each dictionary containing a shortened version 
+    of a user's query and the corresponding result. The final query is always fully included, 
+    while the remaining queries are included in a shortened form until they fill up the remaining 
+    percentage of the total allowed history size.
+    
+    The function uses the following percentages to determine how much of the total history size 
+    each component can take up:
+    - The final query message: 30%
+    - The final query result: 30%
+    - All remaining queries and results: 40% (each individual query or result can take up to 5%)
+    
+    If a query's message and result combined would exceed the remaining history size, 
+    that query is not included in the summary.
 
+    Args:
+      user_session (MockUserSession): The user session containing the queries to summarize.
+      max_history_size (int, optional): The maximum allowed size of the history. Default is 2000.
+
+    Returns:
+      List[Dict[str, str]]: The summary of the user's session queries.
+    """
+
+    QUERY_PERCENTAGE = 0.3
+    RESULT_PERCENTAGE = 0.3
+    REMAINING_PERCENTAGE = 0.4
+    INDIVIDUAL_PERCENTAGE = 0.05
+
+    def shorten_text(text, max_length):
+        return text if len(text) <= max_length else text[:max_length-3] + "..."
+
+    summary = []
+    temp_summary = []
+
+    # Process the last query first
+    last_query = user_session.queries_list[-1] if user_session.queries_list else None
+    if last_query:
+        last_query_msg = shorten_text(last_query.get_user_query_msg(), int(max_history_size * QUERY_PERCENTAGE))
+        last_query_result = shorten_text(last_query.get_tasks()[-1]['result'] if last_query.get_tasks() else '', int(max_history_size * RESULT_PERCENTAGE))
+
+        summary.append({
+          "user_query_msg": last_query_msg,
+          "reply": last_query_result
+        })
+
+    # Process the remaining queries
+    remaining_chars = int(max_history_size * REMAINING_PERCENTAGE)
+    remaining_queries = user_session.queries_list[:-1][::-1]  # Reverse the order to prioritize recent queries
+
+    for query in remaining_queries:
+        query_msg = shorten_text(query.get_user_query_msg(), int(max_history_size * INDIVIDUAL_PERCENTAGE))
+        query_result = shorten_text(query.get_tasks()[-1]['result'] if query.get_tasks() else '', int(max_history_size * INDIVIDUAL_PERCENTAGE))
+
+        if len(query_msg) + len(query_result) <= remaining_chars:
+            remaining_chars -= len(query_msg) + len(query_result)
+
+            # Prepend the query since we're processing in reverse order
+            temp_summary.insert(0, {
+              "user_query_msg": query_msg,
+              "reply": query_result
+            })
+
+    # Concatenate the results, preserving the original order
+    summary = temp_summary + summary
+
+    return summary
 
 def get_operators_info(client):
     if client is not None:
