@@ -53,8 +53,7 @@ def extract_json_block(text):
         raise APIFailureException("No JSON block found in the text.")
 
 
-def run(messages, llm_names):
-    llm = None
+def get_llm_model(llm_names):
     model = None
     # Select the first found configured model
     for llm_model in llm_names:
@@ -65,7 +64,11 @@ def run(messages, llm_names):
     if model is None:
         raise UnsupportedAIProviderException("Didn't find configurations of any of the desired models, "
                                              "Please set the configuration of the desired model in the env!")
+    return model
 
+
+def run(messages, llm_names):
+    model = get_llm_model(llm_names)
     llm, model_name = get_llm(model)
 
     logger.system_message(str("Calling LLM-" + model["ai_provider"] + " " + model_name + " with: \n"))
