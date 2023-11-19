@@ -1,4 +1,7 @@
 import json
+import os
+import logging
+from logging.handlers import RotatingFileHandler
 from termcolor import colored
 
 COLOR_BLACK = "black"
@@ -21,6 +24,37 @@ COLOR_LIGHT_CYAN = "light_cyan"
 all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_LIGHT_GREY, COLOR_DARK_GREY, COLOR_LIGHT_RED, COLOR_LIGHT_GREEN,
               COLOR_LIGHT_YELLOW, COLOR_LIGHT_BLUE, COLOR_LIGHT_MAGENTA, COLOR_LIGHT_CYAN]
 
+def setup_logger():
+    # Read the COPILOT_LOG_LEVEL environment variable
+    log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "INFO")
+
+    # Convert log level string to integer value
+    log_level = getattr(logging, log_level_str.upper(), logging.INFO)
+
+    # Set up the logging configuration with a rotating file handler
+    log_file = 'logs/app.log'
+    max_file_size_bytes = 1024 * 1024 * 256  # 256 MB
+    backup_count = 3  # Number of backup files to keep
+
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+
+    # Create the directory if it doesn't exist
+    log_dir = os.path.dirname(log_file)
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+
+    # Create a rotating file handler
+    rotating_handler = RotatingFileHandler(log_file, maxBytes=max_file_size_bytes, backupCount=backup_count)
+    rotating_handler.setFormatter(formatter)
+
+    # Create a logger and add the rotating file handler
+    logger = logging.getLogger(__name__)
+    logger.addHandler(rotating_handler)
+    logger.setLevel(log_level)
+
+    return logger
+
+__internal_logger = setup_logger()
 
 def print_all_colors():
     for color in all_colors:
@@ -29,30 +63,37 @@ def print_all_colors():
 
 def info(message):
     print(colored(message, COLOR_LIGHT_GREEN))
+    __internal_logger.info(message)
 
 
 def trace(message):
     print(colored(message, COLOR_YELLOW))
+    __internal_logger.trace(message)
 
 
 def error(message):
     print(colored(message, COLOR_RED))
+    __internal_logger.error(message)
 
 
 def operator_response(message):
     print(colored(message, COLOR_DARK_GREY))
+    __internal_logger.debug(message)
 
 
 def operator_input(message):
     print(colored(message, COLOR_DARK_GREY))
+    __internal_logger.debug(message)
 
 
 def system_message(message):
+    __internal_logger.debug(message)
     print(colored(message, COLOR_BLUE))
 
 
 def predefined_message(message):
     print(colored(message, COLOR_MAGENTA))
+    __internal_logger.debug(message)
 
 
 def print_colored(message, color):
@@ -63,6 +104,8 @@ def print_tasks(tasks_json_array):
     for task in tasks_json_array:
         color = COLOR_YELLOW if task["status"] == "TODO" else COLOR_GREEN
         print_colored(json.dumps(task), color)
+        __internal_logger.debug(json.dumps(task))
+        
 
 
 def print_gpt_messages(messages):
@@ -70,3 +113,4 @@ def print_gpt_messages(messages):
         role = message['role']
         content = message['content']
         operator_response(f"{role}: {content}")
+
