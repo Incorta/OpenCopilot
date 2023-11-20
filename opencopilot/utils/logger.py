@@ -58,46 +58,47 @@ __internal_logger = setup_logger()
 
 def print_all_colors():
     for color in all_colors:
-        print(colored(f"Hello world!: {color}", color))
+        print_colored(f"Hello world!: {color}", color)
 
 
 def info(message):
-    print(colored(message, COLOR_LIGHT_GREEN))
+    print_colored(message, COLOR_LIGHT_GREEN)
     __internal_logger.info(message)
 
 
 def trace(message):
-    print(colored(message, COLOR_YELLOW))
+    print_colored(message, COLOR_YELLOW)
     __internal_logger.trace(message)
 
 
 def error(message):
-    print(colored(message, COLOR_RED))
+    print_colored(message, COLOR_RED)
     __internal_logger.error(message)
 
 
 def operator_response(message):
-    print(colored(message, COLOR_DARK_GREY))
+    print_colored(message, COLOR_DARK_GREY)
     __internal_logger.debug(message)
 
 
 def operator_input(message):
-    print(colored(message, COLOR_DARK_GREY))
+    print_colored(message, COLOR_DARK_GREY)
     __internal_logger.debug(message)
 
 
 def system_message(message):
+    print_colored(message, COLOR_BLUE)
     __internal_logger.debug(message)
-    print(colored(message, COLOR_BLUE))
 
 
 def predefined_message(message):
-    print(colored(message, COLOR_MAGENTA))
+    print_colored(message, COLOR_MAGENTA)
     __internal_logger.debug(message)
 
 
 def print_colored(message, color):
-    print(colored(message, color))
+    if __internal_logger.isEnabledFor(logging.INFO):
+        print(colored(message, color))
 
 
 def print_tasks(tasks_json_array):
