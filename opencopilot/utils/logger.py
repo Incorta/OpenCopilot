@@ -26,10 +26,10 @@ all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COL
 
 def setup_logger():
     # Read the COPILOT_LOG_LEVEL environment variable
-    log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "INFO")
+    log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "ERROR")
 
     # Convert log level string to integer value
-    log_level = getattr(logging, log_level_str.upper(), logging.INFO)
+    log_level = getattr(logging, log_level_str.upper(), logging.ERROR)
 
     # Set up the logging configuration with a rotating file handler
     log_file = 'logs/app.log'
