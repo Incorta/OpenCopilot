@@ -25,6 +25,9 @@ all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COL
               COLOR_LIGHT_YELLOW, COLOR_LIGHT_BLUE, COLOR_LIGHT_MAGENTA, COLOR_LIGHT_CYAN]
 
 def setup_logger():
+    global __internal_logger
+    if __internal_logger is not None:
+        return __internal_logger
     # Read the COPILOT_LOG_LEVEL environment variable
     log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "ERROR")
 
@@ -48,13 +51,14 @@ def setup_logger():
     rotating_handler.setFormatter(formatter)
 
     # Create a logger and add the rotating file handler
-    logger = logging.getLogger(__name__)
-    logger.addHandler(rotating_handler)
-    logger.setLevel(log_level)
+    __internal_logger = logging.getLogger(__name__)
+    __internal_logger.addHandler(rotating_handler)
+    __internal_logger.setLevel(log_level)
 
-    return logger
+    return __internal_logger
 
-__internal_logger = setup_logger()
+__internal_logger = None
+setup_logger()
 
 def print_all_colors():
     for color in all_colors:
