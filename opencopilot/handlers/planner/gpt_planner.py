@@ -132,7 +132,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     })
     planner_messages.append({"role": "system", "content": prompt_text})
     planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective})
-    planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks and one or more UI Operator in JSON:"})
+    planner_messages.append({"role": "assistant", "content": "The full plan containing all required tasks in JSON:"})
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response

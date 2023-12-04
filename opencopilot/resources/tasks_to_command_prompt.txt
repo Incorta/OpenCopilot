@@ -14,7 +14,7 @@ Commands Overview: {{ commands_overview }}
 {% for command in commands %}
 Command {{ loop.index }} Description: {{ command["command_description"] }}
 Command {{ loop.index }} JSON Format:
-{{ command["command"]|tojson }}
+{{ command["command"]|tojson(indent=2) }}
 {% endfor %}
 
 {% if tasksLength > 0 %}
@@ -26,4 +26,3 @@ Notice that the result of any operator/task name that starts with UI can be read
 Ensure the response can be parsed by Python json.loads.
 
 Command ==> JSON:
-
