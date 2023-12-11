@@ -7,6 +7,7 @@ session_query_store = "store"
 session_query_user_query_msg = "user_query_msg"
 session_query_leve0_plan = "level0_plan"
 session_query_operators = "operators"
+session_timeout = 60 * 60
 
 # Operator blocks
 Command = "command"
