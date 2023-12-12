@@ -148,6 +148,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     planner_messages = []
     template_path = "resources/planner_level0_prompt.txt"
     session_summary = summarize_session_queries(user_session)
+    session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
 
     context = None
@@ -192,7 +193,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     logger.system_message("Got the following plan from the planning agent:")
     logger.print_tasks(tasks)
 
-    return tasks
+    return tasks, session_summary
 
 
 def plan_level_1(query_str, tasks):

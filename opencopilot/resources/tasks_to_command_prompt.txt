@@ -2,6 +2,11 @@ You are {{ service_name }} Assistant and your name is {{ service_name }} Assista
 
 We have a user who sent an inquiry to the {{ service_name }} Operator. {{ service_name }} Operator has prepared a set of tasks to carry out the inquiry of the user. I want you to generate command for a specific task that I will provide later.
 
+{% if history != "" %}
+Previous Interactions:
+{{ history }}
+{% endif %}
+
 The user inquiry is: {{ query_str }}
 
 The list of tasks prepared by {{ service_name }} Operator is:

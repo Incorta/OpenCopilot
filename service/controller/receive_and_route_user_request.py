@@ -11,11 +11,11 @@ from opencopilot.utils.exceptions import UnknownCommandError
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 
 
-def execute_sub_task(query_str, tasks, task_index, session_query):
+def execute_sub_task(query_str, tasks, task_index, session_query, session_summary):
     logger.system_message("Handling next task:")
     logger.operator_input(tasks[task_index])
 
-    command = gpt_task_processor.get_command_from_task(query_str, tasks, task_index, session_query)
+    command = gpt_task_processor.get_command_from_task(query_str, tasks, task_index, session_query, session_summary)
 
     session_query.set_pending_agent_communications(component=task_index, sub_component=constants.Command, value=command)
 
@@ -39,15 +39,15 @@ def execute_sub_task(query_str, tasks, task_index, session_query):
     tasks[task_index][constants.Result] = result
 
 
-def execute_task(query_str, tasks, task_index, session_query):
+def execute_task(query_str, tasks, task_index, session_query, session_summary):
     task = tasks[task_index]
     if constants.SubTasks not in task:
-        execute_sub_task(query_str, tasks, task_index, session_query)
+        execute_sub_task(query_str, tasks, task_index, session_query, session_summary)
     else:
         logger.system_message("Executing sub-task of the task: " + task["short_description"])
         sub_tasks = task[constants.SubTasks]
         for i in range(0, len(sub_tasks)):
-            execute_sub_task(query_str, sub_tasks, i, session_query)
+            execute_sub_task(query_str, sub_tasks, i, session_query, session_summary)
             i += 1
 
     tasks[task_index][constants.Status] = constants.DONE
@@ -86,7 +86,7 @@ def run_planning_loop(user_query_obj, session):
 
     session_query.set_pending_agent_communications(component=constants.session_query_user_query_msg, sub_component=None, value=user_query_msg)
 
-    initial_planned_tasks = gpt_planner.plan_level_0(user_query_msg, session, session_query)
+    initial_planned_tasks, session_summary = gpt_planner.plan_level_0(user_query_msg, session, session_query)
 
     tasks = gpt_planner.plan_level_1(user_query_msg, initial_planned_tasks)
     logger.system_message("Enriched planned tasks:")
@@ -98,7 +98,7 @@ def run_planning_loop(user_query_obj, session):
         if next_task_index < 0:
             break
 
-        execute_task(user_query_msg, tasks, next_task_index, session_query)
+        execute_task(user_query_msg, tasks, next_task_index, session_query, session_summary)
 
         yield {constants.session_query_tasks: tasks, constants.session_query: session_query}
 
