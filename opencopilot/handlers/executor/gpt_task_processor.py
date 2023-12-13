@@ -52,7 +52,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER",
     formulated_tasks = formulate_tasks(
         tasks_subset, task["depends_on_output_of"], task_index)
 
-    history = {str(idx): session_summary[str(idx)] for idx in tasks[task_index - 1]["previous_interactions"]}
+    history = {str(idx): session_summary[str(idx)] for idx in tasks[task_index]["previous_interactions"]}
     history_str = json.dumps(history, indent=2) if len(history) > 0 else ""
 
     prompt_text = jinja_utils.load_template(template_path, {
