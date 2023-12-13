@@ -24,9 +24,6 @@ def get_next_todo_task_index(tasks_list):
 
 def resolve_tasks(tasks_list):
     import re
-    # Filter tasks as before
-    filtered_tasks = [task for task in tasks_list if task['operator'] in [
-        'UiChartOp', 'FinalResultText', 'UiTextOp']]
     # Create a mapping of ids to results for easier access
     task_results = {}
     for task in tasks_list:
@@ -34,22 +31,20 @@ def resolve_tasks(tasks_list):
             task_results[task['id']] = task['result']
         elif isinstance(task['result'], dict):
             task_results[task['id']] = str(task['result'])
-    # Iterate over filtered tasks
-    for task in filtered_tasks:
-        # If the task operator is 'FinalResultText'
-        if task['operator'] == 'FinalResultText':
-            # Find all taskID references in the result string
-            result_message = task['result']['message']
+    # Iterate over tasks_list
+    for task in tasks_list:
+        # Find all taskID references in the result string
+        result_message = task['result']['message']
 
-            # Find all occurrences of @taskID in the result_message
-            for match in re.finditer(r'@task(\d+)', result_message):
-                id = match.group(1)
-                if int(id) in task_results:
-                    # Replace each reference with the corresponding task result
-                    result_message = result_message.replace(
-                        '@task' + id, task_results[int(id)])
+        # Find all occurrences of @taskID in the result_message
+        for match in re.finditer(r'@task(\d+)', result_message):
+            id = match.group(1)
+            if int(id) in task_results:
+                # Replace each reference with the corresponding task result
+                result_message = result_message.replace(
+                    '@task' + id, task_results[int(id)])
 
-            task['result']['message'] = result_message
+        task['result']['message'] = result_message
 
     return filtered_tasks
 
