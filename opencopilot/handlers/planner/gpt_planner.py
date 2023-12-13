@@ -45,7 +45,7 @@ def resolve_tasks(tasks_list):
                     result_message = result_message.replace(
                         '@task' + id, task_results[int(id)])
 
-        task['result']['message'] = result_message
+            task['result']['message'] = result_message
 
     return filtered_tasks
 
