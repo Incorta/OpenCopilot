@@ -47,7 +47,7 @@ def resolve_tasks(tasks_list):
 
             task['result']['message'] = result_message
 
-    return filtered_tasks
+    return tasks_list
 
 
 def summarize_session_queries(user_session, max_history_size=2000):
