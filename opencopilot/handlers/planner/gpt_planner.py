@@ -34,15 +34,16 @@ def resolve_tasks(tasks_list):
     # Iterate over tasks_list
     for task in tasks_list:
         # Find all taskID references in the result string
-        result_message = task['result']['message']
+        if "message" in task['result']:
+            result_message = task['result']['message']
 
-        # Find all occurrences of @taskID in the result_message
-        for match in re.finditer(r'@task(\d+)', result_message):
-            id = match.group(1)
-            if int(id) in task_results:
-                # Replace each reference with the corresponding task result
-                result_message = result_message.replace(
-                    '@task' + id, task_results[int(id)])
+            # Find all occurrences of @taskID in the result_message
+            for match in re.finditer(r'@task(\d+)', result_message):
+                id = match.group(1)
+                if int(id) in task_results:
+                    # Replace each reference with the corresponding task result
+                    result_message = result_message.replace(
+                        '@task' + id, task_results[int(id)])
 
         task['result']['message'] = result_message
 
