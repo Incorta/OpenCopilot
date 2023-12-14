@@ -20,7 +20,7 @@ def formulate_tasks(tasks, dependencies, task_index):
     return tasks
 
 
-def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER", session_query=None):
+def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER", session_query=None, session_summary=None):
     task = tasks[task_index]
 
     # Check that the task's operator exists in the operators' group op_functions and get its command help
@@ -52,6 +52,11 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER",
     formulated_tasks = formulate_tasks(
         tasks_subset, task["depends_on_output_of"], task_index)
 
+    history = {}
+    if "previous_interactions" in tasks[task_index]:
+        history = {str(idx): session_summary[str(idx)] for idx in tasks[task_index]["previous_interactions"]}
+    history_str = json.dumps(history, indent=2) if len(history) > 0 else ""
+
     prompt_text = jinja_utils.load_template(template_path, {
         "query_str": query_str,
         "tasks": json.dumps(formulated_tasks),
@@ -60,17 +65,18 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER",
         "commands": commands_help["commands"],
         "tasksLength": tasks_count,
         "sub_tasks_expectations": sub_tasks_expectations,
-        "service_name": operators_handler_module.group_name
+        "service_name": operators_handler_module.group_name,
+        "history": history_str
     })
 
     return prompt_text
 
 
-def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker):
+def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker, session_summary):
 
     # -- Build request
     prompt_text = get_command_prompt_from_task(
-        query_str, tasks, task_index, "EXECUTOR", session_entry)
+        query_str, tasks, task_index, "EXECUTOR", session_entry, session_summary)
     logger.system_message("Creating command from task description")
     messages = [{"role": "user", "content": prompt_text}]
     logger.print_gpt_messages(messages)

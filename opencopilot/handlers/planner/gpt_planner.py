@@ -22,6 +22,33 @@ def get_next_todo_task_index(tasks_list):
 
     return -1
 
+def resolve_tasks(tasks_list):
+    import re
+    # Create a mapping of ids to results for easier access
+    task_results = {}
+    for task in tasks_list:
+        if isinstance(task['result'], str):
+            task_results[task['id']] = task['result']
+        elif isinstance(task['result'], dict):
+            task_results[task['id']] = str(task['result'])
+    # Iterate over tasks_list
+    for task in tasks_list:
+        # Find all taskID references in the result string
+        if "message" in task['result']:
+            result_message = task['result']['message']
+
+            # Find all occurrences of @taskID in the result_message
+            for match in re.finditer(r'@task(\d+)', result_message):
+                id = match.group(1)
+                if int(id) in task_results:
+                    # Replace each reference with the corresponding task result
+                    result_message = result_message.replace(
+                        '@task' + id, task_results[int(id)])
+
+            task['result']['message'] = result_message
+
+    return tasks_list
+
 
 def summarize_session_queries(user_session, max_history_size=2000):
     """
@@ -64,7 +91,8 @@ def summarize_session_queries(user_session, max_history_size=2000):
     last_query = user_session.queries_list[-1] if user_session.queries_list else None
     if last_query:
         last_query_msg = shorten_text(last_query.get_user_query_msg(), int(max_history_size * QUERY_PERCENTAGE))
-        last_query_result = shorten_text(last_query.get_tasks()[-1]['result'] if last_query.get_tasks() else '', int(max_history_size * RESULT_PERCENTAGE))
+        resolved_tasks = resolve_tasks(last_query.get_tasks())
+        last_query_result = shorten_text(resolved_tasks[-1]['result'] if last_query.get_tasks() else '', int(max_history_size * RESULT_PERCENTAGE))
 
         summary.append({
           "user_query_msg": last_query_msg,
@@ -77,7 +105,8 @@ def summarize_session_queries(user_session, max_history_size=2000):
 
     for query in remaining_queries:
         query_msg = shorten_text(query.get_user_query_msg(), int(max_history_size * INDIVIDUAL_PERCENTAGE))
-        query_result = shorten_text(query.get_tasks()[-1]['result'] if query.get_tasks() else '', int(max_history_size * INDIVIDUAL_PERCENTAGE))
+        resolved_tasks = resolve_tasks(query.get_tasks())
+        query_result = shorten_text(resolved_tasks[-1]['result'] if query.get_tasks() else '', int(max_history_size * INDIVIDUAL_PERCENTAGE))
 
         if len(query_msg) + len(query_result) <= remaining_chars:
             remaining_chars -= len(query_msg) + len(query_result)
@@ -115,6 +144,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     planner_messages = []
     template_path = "resources/planner_level0_prompt.txt"
     session_summary = summarize_session_queries(user_session)
+    session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
 
     context = None
@@ -159,7 +189,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     logger.system_message("Got the following plan from the planning agent:")
     logger.print_tasks(tasks)
 
-    return tasks
+    return tasks, session_summary
 
 
 def plan_level_1(query_str, tasks):
