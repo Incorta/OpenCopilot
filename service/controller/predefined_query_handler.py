@@ -19,12 +19,12 @@ def validate_predefined_query(query_object):
         return False
 
     # Check that level 0 plan exists
-    if not (constants.session_query_leve0_plan in predefined_object
-            and constants.Response in predefined_object[constants.session_query_leve0_plan]
-            and constants.Tasks in predefined_object[constants.session_query_leve0_plan][constants.Response]):
+    if not (constants.session_query_level0_plan in predefined_object
+            and constants.Response in predefined_object[constants.session_query_level0_plan]
+            and constants.Tasks in predefined_object[constants.session_query_level0_plan][constants.Response]):
         return False
 
-    tasks = predefined_object[constants.session_query_leve0_plan][constants.Response][constants.Tasks]
+    tasks = predefined_object[constants.session_query_level0_plan][constants.Response][constants.Tasks]
     tasks_count = len(tasks)
 
     operators = None

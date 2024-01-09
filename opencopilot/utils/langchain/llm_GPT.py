@@ -67,8 +67,11 @@ def get_llm_model(llm_names):
     return model
 
 
-def run(messages, llm_names):
+def run(messages, llm_names, turbo_mode=False):
     model = get_llm_model(llm_names)
+    if turbo_mode and model["azure_openai_text_completion_deployment_name"] == "gpt4-model":
+        model["azure_openai_text_completion_deployment_name"] = "gpt4-turbo"
+
     llm, model_name = get_llm(model)
 
     logger.system_message(str("Calling LLM-" + model["ai_provider"] + " " + model_name + " with: \n"))
@@ -93,7 +96,7 @@ def run(messages, llm_names):
         consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
     llm_reply_text = llm_reply.content
-    return extract_json_block(llm_reply_text), consumption_tracking
+    return extract_json_block(llm_reply_text), consumption_tracking, model_name
 
 
 def get_llm(model):

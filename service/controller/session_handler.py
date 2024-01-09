@@ -63,8 +63,8 @@ class Session:
                 return None
             if component == constants.session_query_user_query_msg:
                 cached_result = self._cached_agent_communications[constants.session_query_user_query_msg]
-            elif component == constants.session_query_leve0_plan:
-                cached_result = self._cached_agent_communications[constants.session_query_leve0_plan][sub_component]
+            elif component == constants.session_query_level0_plan:
+                cached_result = self._cached_agent_communications[constants.session_query_level0_plan][sub_component]
             elif component < len(self._cached_agent_communications[constants.session_query_operators]):
                 cached_result = self._cached_agent_communications[constants.session_query_operators][component][sub_component]
             else:
@@ -81,7 +81,7 @@ class Session:
         def get_operator_from_task_index(self, task_index):
             if self._cached_agent_communications:
                 try:
-                    return self._cached_agent_communications[constants.session_query_leve0_plan][constants.Response][constants.Tasks][task_index][constants.Operator]
+                    return self._cached_agent_communications[constants.session_query_level0_plan][constants.Response][constants.Tasks][task_index][constants.Operator]
                 except Exception as e:
                     print(e)
                     return None
@@ -94,20 +94,20 @@ class Session:
             if component == constants.session_query_user_query_msg:
                 self._pending_agent_communications[component] = value
 
-            elif component == constants.session_query_leve0_plan:
+            elif component == constants.session_query_levle0_plan:
                 if component not in self._pending_agent_communications:
-                    self._pending_agent_communications[constants.session_query_leve0_plan] = {}
+                    self._pending_agent_communications[constants.session_query_level0_plan] = {}
                 if sub_component == constants.Request:
-                    self._pending_agent_communications[constants.session_query_leve0_plan][constants.Request] = value
-                    self._pending_agent_communications[constants.session_query_leve0_plan][constants.RequestText] = format_request_object(value)
+                    self._pending_agent_communications[constants.session_query_level0_plan][constants.Request] = value
+                    self._pending_agent_communications[constants.session_query_level0_plan][constants.RequestText] = format_request_object(value)
                 elif sub_component == constants.Response:
-                    self._pending_agent_communications[constants.session_query_leve0_plan][constants.Response] = copy.deepcopy(value)
+                    self._pending_agent_communications[constants.session_query_level0_plan][constants.Response] = copy.deepcopy(value)
 
             else:
                 # Checks if the key "operators" exists in the dictionary.
                 # If not, it adds an empty list of size equal to tasks count
                 if constants.session_query_operators not in self._pending_agent_communications:
-                    operators_list_size = len(self._pending_agent_communications[constants.session_query_leve0_plan][constants.Response][constants.Tasks])
+                    operators_list_size = len(self._pending_agent_communications[constants.session_query_level0_plan][constants.Response][constants.Tasks])
                     self._pending_agent_communications[constants.session_query_operators] = [{} for _ in range(operators_list_size)]
 
                 if sub_component == constants.Request:
@@ -125,7 +125,7 @@ class Session:
 
         def get_modified_pending_agent_communications(self):
             modified_pending_agent_communications = copy.deepcopy(self._pending_agent_communications)
-            for task in modified_pending_agent_communications[constants.session_query_leve0_plan][constants.Response][constants.Tasks]:
+            for task in modified_pending_agent_communications[constants.session_query_level0_plan][constants.Response][constants.Tasks]:
                 task[constants.Status] = constants.TODO
                 task[constants.Result] = ""
             return modified_pending_agent_communications

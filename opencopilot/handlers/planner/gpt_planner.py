@@ -8,6 +8,7 @@ from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
 from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
+from opencopilot.utils.llm_evaluator import evaluate_llm_reply
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 planner_llm_models_list = [constants.LLMModelPriority.primary_model.value, constants.LLMModelPriority.secondary_model.value]
@@ -21,6 +22,7 @@ def get_next_todo_task_index(tasks_list):
         i += 1
 
     return -1
+
 
 def resolve_tasks(tasks_list):
     import re
@@ -82,7 +84,7 @@ def summarize_session_queries(user_session, max_history_size=2000):
     INDIVIDUAL_PERCENTAGE = 0.05
 
     def shorten_text(text, max_length):
-        return text if len(text) <= max_length else text[:max_length-3] + "..."
+        return text if len(text) <= max_length else text[:max_length - 3] + "..."
 
     summary = []
     temp_summary = []
@@ -95,8 +97,8 @@ def summarize_session_queries(user_session, max_history_size=2000):
         last_query_result = shorten_text(resolved_tasks[-1]['result'] if last_query.get_tasks() else '', int(max_history_size * RESULT_PERCENTAGE))
 
         summary.append({
-          "user_query_msg": last_query_msg,
-          "reply": last_query_result
+            "user_query_msg": last_query_msg,
+            "reply": last_query_result
         })
 
     # Process the remaining queries
@@ -113,14 +115,15 @@ def summarize_session_queries(user_session, max_history_size=2000):
 
             # Prepend the query since we're processing in reverse order
             temp_summary.insert(0, {
-              "user_query_msg": query_msg,
-              "reply": query_result
+                "user_query_msg": query_msg,
+                "reply": query_result
             })
 
     # Concatenate the results, preserving the original order
     summary = temp_summary + summary
 
     return summary
+
 
 def get_operators_info(context):
     if context is not None:
@@ -139,7 +142,7 @@ def get_operators_info(context):
     return operators_keys, operators_descriptions_str
 
 
-def plan_level_0(user_objective, user_session, session_query, consumption_tracker):
+def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response):
     # Construct planner request
     planner_messages = []
     template_path = "resources/planner_level0_prompt.txt"
@@ -166,17 +169,20 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response
-    consumption_tracking = None
     cached_level0_plan_response = session_query.get_cached_agent_communications_planner_response(planner_messages)
     if cached_level0_plan_response is not None:
         planned_tasks = cached_level0_plan_response
     else:
-        planned_tasks, consumption_tracking = llm_GPT.run(planner_messages, planner_llm_models_list)
-        planned_tasks = json.loads(planned_tasks)
+        planned_tasks, consumption_tracking, _ = llm_GPT.run(planner_messages, planner_llm_models_list)
+        consumption_tracker.add_consumption(consumption_tracking, constants.planner, "level 0")
+        if evaluate_response:
+            evaluation, evaluation_consumption_tracking = evaluate_llm_reply(planner_messages, planned_tasks)
+            evaluator.add_llm_evaluation(evaluation, constants.planner, "level 0")
+            consumption_tracker.add_consumption(evaluation_consumption_tracking, constants.planner, "* Evaluation")
 
-    consumption_tracker.set_planner_consumption(consumption_tracking, "level 0")
+    planned_tasks = json.loads(planned_tasks)
 
-    session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
+    session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 
     # Parse tasks
     if constants.session_query_tasks in planned_tasks:
