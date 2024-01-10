@@ -53,13 +53,17 @@ def extract_json_block(text):
         raise APIFailureException("No JSON block found in the text.")
 
 
-def get_llm_model(llm_names):
+def resolve_llm_model(llm_names, priority_list_mode):
     model = None
-    # Select the first found configured model
-    for llm_model in llm_names:
-        if llm_model in llm_configs and "ai_provider" in llm_configs[llm_model]:
-            model = llm_configs[llm_model]
-            break
+    if priority_list_mode:
+        # Select the first found configured model
+        for llm_model in llm_names:
+            if llm_model in llm_configs and "ai_provider" in llm_configs[llm_model]:
+                model = llm_configs[llm_model]
+                break
+    else:
+        # Resolve extra predefined model
+        model = llm_names
 
     if model is None:
         raise UnsupportedAIProviderException("Didn't find configurations of any of the desired models, "
@@ -67,11 +71,8 @@ def get_llm_model(llm_names):
     return model
 
 
-def run(messages, llm_names, turbo_mode=False):
-    model = get_llm_model(llm_names)
-    if turbo_mode and model["azure_openai_text_completion_deployment_name"] == "gpt4-model":
-        model["azure_openai_text_completion_deployment_name"] = "gpt4-turbo"
-
+def run(messages, llm_names, priority_list_mode=True):
+    model = resolve_llm_model(llm_names, priority_list_mode)
     llm, model_name = get_llm(model)
 
     logger.system_message(str("Calling LLM-" + model["ai_provider"] + " " + model_name + " with: \n"))

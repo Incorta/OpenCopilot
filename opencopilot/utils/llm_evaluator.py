@@ -157,7 +157,8 @@ JSON:
     ]
 
     try:
-        evaluation, consumption_tracking, model_name = run(evaluation_prompt, [constants.LLMModelPriority.primary_model.value], turbo_mode=True)
+        from service.configs.llm_copilot_predefined_model import predefined_model as model
+        evaluation, consumption_tracking, model_name = run(evaluation_prompt, model, priority_list_mode=False)
         evaluation = json.loads(evaluation)
         evaluation_unit = LlmEvaluator.create_evaluation_unit(model_name, float(evaluation["Rating"]), evaluation["Comments"])
         return evaluation_unit, consumption_tracking
