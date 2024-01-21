@@ -165,8 +165,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     })
     planner_messages.append({"role": "system", "content": prompt_text})
     planner_messages.append({"role": "user", "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective + "\nFrom incorta Operator: The plan must answer the user ask that will be provided later. Start by thinking in plain english about the scope of the user ask, determine the tasks of the plan step by step, think of any constraints for each task and whether we need one or more of it, and think whether we need the tasks or not. Then provide the plan containing the required tasks in JSON."})
-    # planner_messages.append({"role": "assistant", "content": "I will think step by step for the tasks needed and whether I need these tasks or not. Then I will provide the full plan containing all required tasks in JSON:"})
-    session_query.set_pending_agent_communications(component=constants.session_query_leve0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
+    session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response
     cached_level0_plan_response = session_query.get_cached_agent_communications_planner_response(planner_messages)
@@ -180,7 +179,10 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
             evaluator.add_llm_evaluation(evaluation, constants.planner, "level 0")
             consumption_tracker.add_consumption(evaluation_consumption_tracking, constants.planner, "* Evaluation")
 
-    planned_tasks = json.loads(planned_tasks)
+    try:
+        planned_tasks = json.loads(planned_tasks)
+    except:
+        pass
 
     session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Response, value=copy.deepcopy(planned_tasks))
 

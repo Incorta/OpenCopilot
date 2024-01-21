@@ -40,25 +40,28 @@ class LlmEvaluator:
         planner_rating = sum(
             step["rating"] for step in self.llm_ratings[constants.planner]
         )
-        executor_total_cost = sum(
+        executor_rating = sum(
             step["rating"] for step in self.llm_ratings[constants.executor]
         )
-        self.overall_rating = (planner_rating + executor_total_cost) / (len(self.llm_ratings[constants.planner]) + len(self.llm_ratings[constants.executor]))
-
         print("\n\nEvaluation Report")
         print("------------------")
-        print(f"Overall Rating: {self.overall_rating:.1f}/10")
+        try:
+            self.overall_rating = (planner_rating + executor_rating) / (len(self.llm_ratings[constants.planner]) + len(self.llm_ratings[constants.executor]))
+            print(f"Overall Rating: {self.overall_rating:.1f}/10")
 
-        print("\nPlanning Evaluation:")
-        planning_table = self.create_evaluation_table(self.llm_ratings[constants.planner])
-        print(tabulate(planning_table, headers="keys", tablefmt="grid"))
+            print("\nPlanning Evaluation:")
+            planning_table = self.create_evaluation_table(self.llm_ratings[constants.planner])
+            print(tabulate(planning_table, headers="keys", tablefmt="grid"))
 
-        print("\nExecution Evaluation:")
-        execution_table = self.create_evaluation_table(self.llm_ratings[constants.executor])
-        print(tabulate(execution_table, headers="keys", tablefmt="grid"))
+            print("\nExecution Evaluation:")
+            execution_table = self.create_evaluation_table(self.llm_ratings[constants.executor])
+            print(tabulate(execution_table, headers="keys", tablefmt="grid"))
 
-        if evaluation_report_path != "":
-            self.write_evaluation_report_to_csv(evaluation_report_path + evaluation_report_filename)
+            if evaluation_report_path != "":
+                self.write_evaluation_report_to_csv(evaluation_report_path + evaluation_report_filename)
+
+        except ZeroDivisionError:
+            print("No new evaluations were made, LLM responses were retrieved from cache!")
 
     @staticmethod
     def create_evaluation_table(steps):
