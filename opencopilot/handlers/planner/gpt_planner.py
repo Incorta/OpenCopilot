@@ -143,28 +143,35 @@ def get_operators_info(context):
 
 
 def construct_level_0_prompt(user_objective, context, user_session):
-    planner_messages = []
-    template_path = "resources/planner_level0_prompt.txt"
     session_summary = summarize_session_queries(user_session)
     session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
     operators_names, operators_descriptions_str = get_operators_info(context)
-    prompt_text = jinja_utils.load_template(template_path, {
+
+    plan_schema = jinja_utils.load_template("resources/plan_schema.txt", {
+        "service_name": operators_handler_module.group_name,
+        "operators": json.dumps(operators_names)
+    })
+    system_content = jinja_utils.load_template("resources/planner_level0_prompt_system.txt", {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.group_name,
         "op_descriptions": operators_descriptions_str,
-        "operators": operators_names
+        "operators": operators_names,
+        "plan_schema": plan_schema
     })
-    planner_messages.append({"role": "system", "content": prompt_text})
-    planner_messages.append({"role": "user",
-                             "content": f"From {operators_handler_module.group_name} Operator: The user is asking: " + user_objective + "\nFrom incorta Operator: The plan must answer the user ask that will be provided later. Start by thinking in plain english about the scope of the user ask, determine the tasks of the plan step by step, think of any constraints for each task and whether we need one or more of it, and think whether we need the tasks or not. Then provide the plan containing the required tasks in JSON."})
+    user_content = jinja_utils.load_template("resources/planner_level0_prompt_user.txt", {
+        "service_name": operators_handler_module.group_name,
+        "user_objective": user_objective
+    })
 
-    return planner_messages, session_summary
+    planner_messages = [{"role": "system", "content": system_content}, {"role": "user", "content": user_content}]
+
+    return planner_messages, session_summary, plan_schema
 
 
 def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response):
     # Construct planner request
-    planner_messages, session_summary = construct_level_0_prompt(user_objective, session_query.get_context(), user_session)
+    planner_messages, session_summary, _ = construct_level_0_prompt(user_objective, session_query.get_context(), user_session)
     session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response
