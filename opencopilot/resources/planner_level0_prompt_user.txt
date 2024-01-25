@@ -1,0 +1,4 @@
+From {{ service_name }} Operator: The user is asking: {{ user_objective }}
+From incorta Operator: The plan must answer the user ask that will be provided later.
+Start by thinking in plain english about the scope of the user ask, determine the tasks of the plan step by step, think of any constraints for each task and whether we need one or more of it, and think whether we need the tasks or not.
+Then provide the plan containing the required tasks in JSON.
