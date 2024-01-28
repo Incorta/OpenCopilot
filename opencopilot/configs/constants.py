@@ -36,3 +36,4 @@ class LLMModelPriority(Enum):
 class SupportedAIProviders(Enum):
     openai = "openai"
     azure_openai = "azure_openai"
+    google_gemini = "google_gemini"

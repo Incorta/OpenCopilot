@@ -14,6 +14,7 @@ from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProvi
 from opencopilot.utils.open_ai import common
 from opencopilot.configs.constants import SupportedAIProviders, LLMModelPriority
 from langchain.callbacks import get_openai_callback
+from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm_configs = None
 
@@ -115,5 +116,12 @@ def get_llm(model):
             deployment_name=model["azure_openai_text_completion_deployment_name"],
             temperature=0
         ), model["azure_openai_text_completion_deployment_name"]
+    elif model["ai_provider"] == SupportedAIProviders.google_gemini.value:
+        return ChatGoogleGenerativeAI(
+            model=model["google_gemini_text_completion_model_name"],
+            google_api_key=model["google_gemini_text_completion_token"],
+            temperature=0,
+            convert_system_message_to_human=True
+        ), model["google_gemini_text_completion_model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
