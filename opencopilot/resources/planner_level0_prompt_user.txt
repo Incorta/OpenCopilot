@@ -4,7 +4,6 @@ User Inquiry:
 
 Before crafting the plan, follow the following preparatory steps in sequence:
 
-Task Identification: Consider the necessary tasks in straightforward English.
-Task Validation: For each task, determine its relevance and whether you should create mulitple instances of it based on its description. Rewrite tasks if a change is required.
-Task Assessment: Reflect on the tasks for potential revisions, like additions, removals or dependency. Rewrite tasks if a change is required.
-Plan Formation: Compile the finalized task list into a valid JSON format.
+Problem: Explain briefly the request of the user in plain english.
+Propopsed Tasks: Propose the tasks and write the number of instances required for each task.
+Plan Formation: Compile the finalized task list into a valid JSON object format.
