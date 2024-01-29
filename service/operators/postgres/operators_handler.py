@@ -30,3 +30,4 @@ op_functions = {
 }
 
 group_name = "postgres"
+service_name = "Postgres Copilot"
