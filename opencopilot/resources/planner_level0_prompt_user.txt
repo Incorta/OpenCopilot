@@ -5,5 +5,5 @@ User Inquiry:
 Before crafting the plan, follow the following preparatory steps in sequence:
 
 Problem: Explain briefly the request of the user in plain english.
-Propopsed Tasks: Propose the tasks and write the number of instances required for each task.
+Proposed Tasks: Propose the tasks and write the number of instances required for each task.
 Plan Formation: Compile the finalized task list into a valid JSON object format.

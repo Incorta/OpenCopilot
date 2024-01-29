@@ -142,22 +142,34 @@ def get_operators_info(context):
     return operators_keys, operators_descriptions_str
 
 
+def formulate_operators_constraints(operators):
+    operators_constraints_str = ""
+    for operator in operators:
+        if "constraints" in operators_handler_module.op_functions[operator] and operators_handler_module.op_functions[operator]["constraints"]:
+            for constraint in operators_handler_module.op_functions[operator]["constraints"]:
+                operators_constraints_str += "\n - " + constraint
+
+    return operators_constraints_str
+
+
 def construct_level_0_prompt(user_objective, context, user_session):
     session_summary = summarize_session_queries(user_session)
     session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
     operators_names, operators_descriptions_str = get_operators_info(context)
+    operators_constraints = formulate_operators_constraints(operators_names)
 
     plan_schema = jinja_utils.load_template("resources/plan_schema.txt", {
-        "service_name": operators_handler_module.group_name,
+        "service_name": operators_handler_module.service_name,
         "operators": json.dumps(operators_names)
     })
     system_content = jinja_utils.load_template("resources/planner_level0_prompt_system.txt", {
         "session_summary": session_summary_str,
-        "service_name": operators_handler_module.group_name,
+        "service_name": operators_handler_module.service_name,
         "op_descriptions": operators_descriptions_str,
         "operators": operators_names,
-        "plan_schema": plan_schema
+        "plan_schema": plan_schema,
+        "op_constraints": operators_constraints
     })
     user_content = jinja_utils.load_template("resources/planner_level0_prompt_user.txt", {
         "service_name": operators_handler_module.group_name,
