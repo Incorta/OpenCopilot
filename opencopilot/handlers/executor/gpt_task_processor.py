@@ -1,7 +1,7 @@
 import copy
 import importlib
 import json
-from opencopilot.configs import env, constants
+from opencopilot.configs import constants
 from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
 from opencopilot.utils import logger, exceptions
@@ -20,12 +20,12 @@ def formulate_tasks(tasks, dependencies, task_index):
     return tasks
 
 
-def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER", session_query=None, session_summary=None):
+def get_command_prompt_from_task(query_str, tasks, task_index, session,  target="PLANNER", session_query=None, session_summary=None):
     task = tasks[task_index]
 
     # Check that the task's operator exists in the operators' group op_functions and get its command help
     if task[constants.Operator] in operators_handler_module.op_functions:
-        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"](session_query)
+        commands_help = operators_handler_module.op_functions[task[constants.Operator]]["get_commands_help"](session_query, session)
         commands_help["overview"] = operators_handler_module.op_functions[task[constants.Operator]]["description"]
     else:
         raise exceptions.UnknownCommandError(
@@ -70,10 +70,10 @@ def get_command_prompt_from_task(query_str, tasks, task_index, target="PLANNER",
     return prompt_text
 
 
-def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker, session_summary, evaluator, evaluate_response):
+def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker, session_summary, evaluator, evaluate_response, session):
 
     # -- Build request
-    prompt_text = get_command_prompt_from_task(query_str, tasks, task_index, "EXECUTOR", session_entry, session_summary)
+    prompt_text = get_command_prompt_from_task(query_str, tasks, task_index, session, "EXECUTOR", session_entry, session_summary)
     logger.system_message("Creating command from task description")
     messages = [{"role": "user", "content": prompt_text}]
     logger.print_gpt_messages(messages)
