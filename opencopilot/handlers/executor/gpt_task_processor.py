@@ -66,16 +66,16 @@ def get_command_prompt_from_task(query_str, tasks, task_index, session,  target=
         "service_name": operators_handler_module.group_name,
         "history": history_str
     })
+    messages = [{"role": "user", "content": prompt_text}]
 
-    return prompt_text
+    return messages
 
 
 def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker, session_summary, evaluator, evaluate_response, session):
 
     # -- Build request
-    prompt_text = get_command_prompt_from_task(query_str, tasks, task_index, session, "EXECUTOR", session_entry, session_summary)
+    messages = get_command_prompt_from_task(query_str, tasks, task_index, session, target="EXECUTOR", session_query=session_entry, session_summary=session_summary)
     logger.system_message("Creating command from task description")
-    messages = [{"role": "user", "content": prompt_text}]
     logger.print_gpt_messages(messages)
     session_entry.set_pending_agent_communications(component=task_index, sub_component="request", value=copy.deepcopy(messages))
 
