@@ -16,7 +16,3 @@ class UnauthorizedUserException(Exception):
 
 class UnsupportedAIProviderException(Exception):
     pass
-
-
-class NotFoundInCacheException(Exception):
-    pass
