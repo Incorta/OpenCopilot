@@ -24,6 +24,7 @@ COLOR_LIGHT_CYAN = "light_cyan"
 all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_LIGHT_GREY, COLOR_DARK_GREY, COLOR_LIGHT_RED, COLOR_LIGHT_GREEN,
               COLOR_LIGHT_YELLOW, COLOR_LIGHT_BLUE, COLOR_LIGHT_MAGENTA, COLOR_LIGHT_CYAN]
 
+
 def setup_logger():
     global __internal_logger
     if __internal_logger is not None:
@@ -35,7 +36,9 @@ def setup_logger():
     log_level = getattr(logging, log_level_str.upper(), logging.ERROR)
 
     # Set up the logging configuration with a rotating file handler
-    log_file = 'logs/app.log'
+    logs_path = os.environ.get("COPILOT_LOG_PATH", "")
+    log_file = os.path.join(logs_path, 'app.log')
+
     max_file_size_bytes = 1024 * 1024 * 256  # 256 MB
     backup_count = 3  # Number of backup files to keep
 
@@ -57,8 +60,10 @@ def setup_logger():
 
     return __internal_logger
 
+
 __internal_logger = None
 setup_logger()
+
 
 def print_all_colors():
     for color in all_colors:
@@ -110,7 +115,6 @@ def print_tasks(tasks_json_array):
         color = COLOR_YELLOW if task["status"] == "TODO" else COLOR_GREEN
         print_colored(json.dumps(task), color)
         __internal_logger.debug(json.dumps(task))
-        
 
 
 def print_gpt_messages(messages):
@@ -118,4 +122,3 @@ def print_gpt_messages(messages):
         role = message['role']
         content = message['content']
         operator_response(f"{role}: {content}")
-
