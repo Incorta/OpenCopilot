@@ -20,9 +20,12 @@ Constraints:
 {% endif %}
 
 
+
 **Output Format SCHEMA**
 
-Think about the plan then provide a plan in JSON format. Use this JSON SCHEMA ONLY to design the plan:
+Use this SCHEMA ONLY to design response format, NEVER use the schema in the response.
+Do not return any of the results of the tasks (use "") EXCEPT FinalResultText.
+
 ```json
 {{ plan_schema }}
 ```
