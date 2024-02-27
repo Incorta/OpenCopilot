@@ -1,5 +1,5 @@
 import json
-from langchain.chat_models import ChatOpenAI, AzureChatOpenAI
+from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain.schema import (
     AIMessage,
     HumanMessage,
@@ -7,13 +7,14 @@ from langchain.schema import (
 )
 import opencopilot.utils.logger as logger
 from opencopilot.configs.LLM_Configurations import LLMConfigurations
+from opencopilot.configs.ai_providers import SupportedAIProviders, get_model_temperature
 from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils import network
 from opencopilot.utils.consumption_tracker import ConsumptionTracker
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
 from opencopilot.utils.open_ai import common
-from opencopilot.configs.constants import SupportedAIProviders, LLMModelPriority
-from langchain.callbacks import get_openai_callback
+from opencopilot.configs.constants import LLMModelPriority
+from langchain_community.callbacks import get_openai_callback
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm_configs = None
@@ -54,7 +55,7 @@ def extract_json_block(text):
         raise APIFailureException("No JSON block found in the text.")
 
 
-def resolve_llm_model(llm_names, priority_list_mode):
+def resolve_llm_model(llm_names, priority_list_mode=True):
     model = None
     if priority_list_mode:
         # Select the first found configured model
@@ -72,8 +73,7 @@ def resolve_llm_model(llm_names, priority_list_mode):
     return model
 
 
-def run(messages, llm_names, priority_list_mode=True):
-    model = resolve_llm_model(llm_names, priority_list_mode)
+def run(messages, model):
     llm, model_name = get_llm(model)
 
     logger.system_message(str("Calling LLM-" + model["ai_provider"] + " " + model_name + " with: \n"))
@@ -94,7 +94,7 @@ def run(messages, llm_names, priority_list_mode=True):
             langchain_messages.append(AIMessage(content=content))
 
     with get_openai_callback() as cb:
-        llm_reply = network.retry(lambda: llm(langchain_messages))
+        llm_reply = llm.invoke(langchain_messages)
         consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
     llm_reply_text = llm_reply.content
@@ -102,25 +102,25 @@ def run(messages, llm_names, priority_list_mode=True):
 
 
 def get_llm(model):
-    if model["ai_provider"] == SupportedAIProviders.openai.value:
+    if model["ai_provider"] == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
             openai_api_key=model["openai_text_completion_token"],
             model_name=model["openai_text_completion_model_name"],
-            temperature=0
+            temperature=get_model_temperature(model["ai_provider"]),
         ), model["openai_text_completion_model_name"]
-    elif model["ai_provider"] == SupportedAIProviders.azure_openai.value:
+    elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(
             openai_api_key=model["azure_openai_text_completion_token"],
             openai_api_version="2023-05-15",
-            openai_api_base=model["azure_openai_text_completion_endpoint"],
+            azure_endpoint=model["azure_openai_text_completion_endpoint"],
             deployment_name=model["azure_openai_text_completion_deployment_name"],
-            temperature=0
+            temperature=get_model_temperature(model["ai_provider"]),
         ), model["azure_openai_text_completion_deployment_name"]
-    elif model["ai_provider"] == SupportedAIProviders.google_gemini.value:
+    elif model["ai_provider"] == SupportedAIProviders.google_gemini.value["provider_name"]:
         return ChatGoogleGenerativeAI(
             model=model["google_gemini_text_completion_model_name"],
             google_api_key=model["google_gemini_text_completion_token"],
-            temperature=0,
+            temperature=get_model_temperature(model["ai_provider"]),
             convert_system_message_to_human=True
         ), model["google_gemini_text_completion_model_name"]
     else:
