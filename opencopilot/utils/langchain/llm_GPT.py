@@ -94,7 +94,7 @@ def run(messages, model):
             langchain_messages.append(AIMessage(content=content))
 
     with get_openai_callback() as cb:
-        llm_reply = llm.invoke(langchain_messages)
+        llm_reply = network.retry(lambda: llm(langchain_messages))
         consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
     llm_reply_text = llm_reply.content
