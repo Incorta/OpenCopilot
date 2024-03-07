@@ -93,6 +93,8 @@ def run(messages, llm_names, priority_list_mode=True):
             langchain_messages.append(AIMessage(content=content))
 
     with get_openai_callback() as cb:
+        logger.info("LLM object: ")
+        logger.info(llm)
         llm_reply = network.retry(lambda: llm(langchain_messages))
         consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 

@@ -3,7 +3,7 @@ import importlib
 import json
 from opencopilot.configs import constants
 from opencopilot.configs.env import operators_path
-from opencopilot.utils import jinja_utils
+from opencopilot.utils import jinja_utils, network
 from opencopilot.utils import logger, exceptions
 from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
@@ -88,7 +88,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry, consumpti
 
     operator_name = operators_handler_module.op_functions[tasks[task_index]["operator"]]["operator_name"]
     if command is None:
-        chat_gpt_response, consumption_tracking, _ = llm_GPT.run(messages, operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"])
+        chat_gpt_response, consumption_tracking, _ = network.retry(lambda: llm_GPT.run(messages, operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"]))
         consumption_tracker.add_consumption(consumption_tracking, constants.executor, operator_name)
         if evaluate_response:
             evaluation, evaluation_consumption_tracking = evaluate_llm_reply(messages, chat_gpt_response)

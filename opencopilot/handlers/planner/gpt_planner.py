@@ -5,7 +5,7 @@ import opencopilot.utils.logger as logger
 from opencopilot.configs import constants
 from opencopilot.handlers.executor import gpt_task_processor
 from opencopilot.configs.env import operators_path
-from opencopilot.utils import jinja_utils
+from opencopilot.utils import jinja_utils, network
 from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
 from opencopilot.utils.llm_evaluator import evaluate_llm_reply
@@ -191,7 +191,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     if cached_level0_plan_response is not None:
         planned_tasks = cached_level0_plan_response
     else:
-        planned_tasks, consumption_tracking, _ = llm_GPT.run(planner_messages, planner_llm_models_list)
+        planned_tasks, consumption_tracking, _ = network.retry(lambda: llm_GPT.run(planner_messages, llm_names=planner_llm_models_list))
         consumption_tracker.add_consumption(consumption_tracking, constants.planner, "level 0")
         if evaluate_response:
             evaluation, evaluation_consumption_tracking = evaluate_llm_reply(planner_messages, planned_tasks)
