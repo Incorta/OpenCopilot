@@ -31,8 +31,4 @@ TODO = "TODO"
 class LLMModelPriority(Enum):
     primary_model = "primary_model"
     secondary_model = "secondary_model"
-
-
-class SupportedAIProviders(Enum):
-    openai = "openai"
-    azure_openai = "azure_openai"
+    embedding_model = "embedding_model"

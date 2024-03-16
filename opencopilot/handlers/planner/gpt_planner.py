@@ -3,11 +3,12 @@ import json
 import importlib
 import opencopilot.utils.logger as logger
 from opencopilot.configs import constants
-from opencopilot.handlers.executor import gpt_task_processor
+from opencopilot.configs.ai_providers import get_planner_prompt_file_path
 from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
 from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
+from opencopilot.utils.langchain.llm_GPT import resolve_llm_model
 from opencopilot.utils.llm_evaluator import evaluate_llm_reply
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
@@ -152,7 +153,7 @@ def formulate_operators_constraints(operators):
     return operators_constraints_str
 
 
-def construct_level_0_prompt(user_objective, context, user_session):
+def construct_level_0_prompt(user_objective, context, user_session, model):
     session_summary = summarize_session_queries(user_session)
     session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
@@ -163,7 +164,7 @@ def construct_level_0_prompt(user_objective, context, user_session):
         "service_name": operators_handler_module.service_name,
         "operators": json.dumps(operators_names)
     })
-    system_content = jinja_utils.load_template("resources/planner_level0_prompt_system.txt", {
+    system_content = jinja_utils.load_template(get_planner_prompt_file_path(model["ai_provider"], "system"), {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.service_name,
         "op_descriptions": operators_descriptions_str,
@@ -171,19 +172,21 @@ def construct_level_0_prompt(user_objective, context, user_session):
         "plan_schema": plan_schema,
         "op_constraints": operators_constraints
     })
-    user_content = jinja_utils.load_template("resources/planner_level0_prompt_user.txt", {
+    user_content = jinja_utils.load_template(get_planner_prompt_file_path(model["ai_provider"], "user"), {
         "service_name": operators_handler_module.group_name,
         "user_objective": user_objective
     })
 
-    planner_messages = [{"role": "system", "content": system_content}, {"role": "user", "content": user_content}]
+    planner_messages = [{"role": "user", "content": system_content + "\n" + user_content}]
 
     return planner_messages, session_summary, plan_schema
 
 
 def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response):
+    model = resolve_llm_model(planner_llm_models_list)
+
     # Construct planner request
-    planner_messages, session_summary, _ = construct_level_0_prompt(user_objective, session_query.get_context(), user_session)
+    planner_messages, session_summary, _ = construct_level_0_prompt(user_objective, session_query.get_context(), user_session, model)
     session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response
@@ -191,7 +194,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     if cached_level0_plan_response is not None:
         planned_tasks = cached_level0_plan_response
     else:
-        planned_tasks, consumption_tracking, _ = llm_GPT.run(planner_messages, planner_llm_models_list)
+        planned_tasks, consumption_tracking, _ = llm_GPT.run(planner_messages, model)
         consumption_tracker.add_consumption(consumption_tracking, constants.planner, "level 0")
         if evaluate_response:
             evaluation, evaluation_consumption_tracking = evaluate_llm_reply(planner_messages, planned_tasks)
@@ -217,35 +220,3 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     logger.print_tasks(tasks)
 
     return tasks, session_summary
-
-
-def plan_level_1(query_str, tasks):
-    for i in range(0, len(tasks)):
-        task = tasks[i]
-
-        if task[constants.Operator] in operators_handler_module.op_functions:  # None of the current operators requires phase 1 planning
-            continue
-
-        prompt_text = gpt_task_processor.get_command_prompt_from_task(query_str, tasks, i, "PLANNER")
-
-        json_str = llm_GPT.run([
-            {"role": "system", "content": prompt_text},
-            {"role": "assistant", "content": "JSON:\n"}],
-            planner_llm_models_list)
-
-        planned_tasks = json.loads(json_str)
-
-        if constants.session_query_tasks in planned_tasks:
-            task[constants.SubTasks] = planned_tasks[constants.session_query_tasks]
-
-        elif isinstance(planned_tasks, list):
-            task[constants.SubTasks] = planned_tasks
-
-        else:
-            raise UnknownCommandError(f"Unexpected format for the tasks: {planned_tasks}")
-
-        logger.system_message("Got the following plan from the planning agent:")
-        logger.print_tasks(planned_tasks)
-        task[constants.SubTasks] = planned_tasks
-
-    return tasks

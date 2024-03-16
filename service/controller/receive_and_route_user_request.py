@@ -86,10 +86,7 @@ def run_planning_loop(user_query_obj, session):
 
     session_query.set_pending_agent_communications(component=constants.session_query_user_query_msg, sub_component=None, value=user_query_msg)
 
-    initial_planned_tasks, session_summary = gpt_planner.plan_level_0(user_query_msg, session, session_query)
-
-    tasks = gpt_planner.plan_level_1(user_query_msg, initial_planned_tasks)
-    logger.system_message("Enriched planned tasks:")
+    tasks, session_summary = gpt_planner.plan_level_0(user_query_msg, session, session_query)
     logger.print_tasks(tasks)
 
     while True:

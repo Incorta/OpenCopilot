@@ -20,7 +20,12 @@ Constraints:
 {% endif %}
 
 
-You should only respond with tasks in JSON format as described in the following JSON schema. Think about the plan then provide a plan in JSON format. Use this JSON SCHEMA ONLY to design the plan:
+
+**Output Format SCHEMA**
+
+Use this SCHEMA ONLY to design response format, NEVER use the schema in the response.
+Do not return any of the results of the tasks (use "") EXCEPT FinalResultText.
+
 ```json
 {{ plan_schema }}
 ```

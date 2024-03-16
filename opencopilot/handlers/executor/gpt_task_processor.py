@@ -2,11 +2,12 @@ import copy
 import importlib
 import json
 from opencopilot.configs import constants
+from opencopilot.configs.ai_providers import get_executor_prompt_file_path
 from opencopilot.configs.env import operators_path
 from opencopilot.utils import jinja_utils
 from opencopilot.utils import logger, exceptions
-from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
+from opencopilot.utils.langchain.llm_GPT import resolve_llm_model
 from opencopilot.utils.llm_evaluator import evaluate_llm_reply
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
@@ -20,7 +21,7 @@ def formulate_tasks(tasks, dependencies, task_index):
     return tasks
 
 
-def get_command_prompt_from_task(query_str, tasks, task_index, session,  target="PLANNER", session_query=None, session_summary=None):
+def get_command_prompt_from_task(query_str, tasks, task_index, session, model, session_query=None, session_summary=None):
     task = tasks[task_index]
 
     # Check that the task's operator exists in the operators' group op_functions and get its command help
@@ -39,14 +40,6 @@ def get_command_prompt_from_task(query_str, tasks, task_index, session,  target=
 
     tasks_count = task_index + 1
 
-    if target == "PLANNER":
-        template_path = "resources/planner_level1_prompt.txt"
-    elif target == "EXECUTOR":
-        template_path = "resources/tasks_to_command_prompt.txt"
-
-    else:
-        raise UnknownCommandError(f"Unknown target: {target}")
-
     tasks_subset = copy.deepcopy(tasks[:tasks_count])
     formulated_tasks = formulate_tasks(tasks_subset, task["depends_on_output_of"], task_index)
 
@@ -55,7 +48,7 @@ def get_command_prompt_from_task(query_str, tasks, task_index, session,  target=
         history = {str(idx): session_summary[str(idx)] for idx in tasks[task_index]["previous_interactions"]}
     history_str = json.dumps(history, indent=2) if len(history) > 0 else ""
 
-    prompt_text = jinja_utils.load_template(template_path, {
+    prompt_text = jinja_utils.load_template(get_executor_prompt_file_path(model["ai_provider"]), {
         "query_str": query_str,
         "tasks": json.dumps(formulated_tasks),
         "curTaskId": task["id"],
@@ -72,9 +65,16 @@ def get_command_prompt_from_task(query_str, tasks, task_index, session,  target=
 
 
 def get_command_from_task(query_str, tasks, task_index, session_entry, consumption_tracker, session_summary, evaluator, evaluate_response, session):
+    model = resolve_llm_model(operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"])
 
     # -- Build request
-    messages = get_command_prompt_from_task(query_str, tasks, task_index, session, target="EXECUTOR", session_query=session_entry, session_summary=session_summary)
+    messages = get_command_prompt_from_task(query_str=query_str,
+                                            tasks=tasks,
+                                            task_index=task_index,
+                                            session=session,
+                                            model=model,
+                                            session_query=session_entry,
+                                            session_summary=session_summary)
     logger.system_message("Creating command from task description")
     logger.print_gpt_messages(messages)
     session_entry.set_pending_agent_communications(component=task_index, sub_component="request", value=copy.deepcopy(messages))
@@ -88,7 +88,7 @@ def get_command_from_task(query_str, tasks, task_index, session_entry, consumpti
 
     operator_name = operators_handler_module.op_functions[tasks[task_index]["operator"]]["operator_name"]
     if command is None:
-        chat_gpt_response, consumption_tracking, _ = llm_GPT.run(messages, operators_handler_module.op_functions[tasks[task_index]["operator"]]["preferred_LLM"])
+        chat_gpt_response, consumption_tracking, _ = llm_GPT.run(messages, model)
         consumption_tracker.add_consumption(consumption_tracking, constants.executor, operator_name)
         if evaluate_response:
             evaluation, evaluation_consumption_tracking = evaluate_llm_reply(messages, chat_gpt_response)

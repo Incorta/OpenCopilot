@@ -2,8 +2,8 @@ User Inquiry:
 
 {{ user_objective }}
 
-Before crafting the plan, follow the following preparatory steps in sequence:
+**Instructions:**
 
-Problem: Explain briefly the request of the user in plain english.
-Proposed Tasks: Propose the tasks and write the number of instances required for each task.
-Plan Formation: Compile the finalized task list into a valid JSON object format.
+* Create a list of tasks leveraging the available operators to provide a solution to the query.
+* Include a FinalResultText task at the end to provide the complete answer to the user.﻿
+* After providing the plan, explain why you propose the selected tables.
