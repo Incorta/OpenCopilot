@@ -90,8 +90,8 @@ def summarize_session_queries(user_session, max_history_size=2000):
     summary = []
     temp_summary = []
 
-    # Process the last query first
-    last_query = user_session.queries_list[-1] if user_session.queries_list else None
+    # Process the last history query first, assuming that the last query is the current query
+    last_query = user_session.queries_list[-2] if user_session.queries_list and len(user_session.queries_list) > 1 else None
     if last_query:
         last_query_msg = shorten_text(last_query.get_user_query_msg(), int(max_history_size * QUERY_PERCENTAGE))
         resolved_tasks = resolve_tasks(last_query.get_tasks())
@@ -104,7 +104,7 @@ def summarize_session_queries(user_session, max_history_size=2000):
 
     # Process the remaining queries
     remaining_chars = int(max_history_size * REMAINING_PERCENTAGE)
-    remaining_queries = user_session.queries_list[:-1][::-1]  # Reverse the order to prioritize recent queries
+    remaining_queries = user_session.queries_list[:-2][::-1]  # Reverse the order to prioritize recent queries (exclude the last two items)
 
     for query in remaining_queries:
         query_msg = shorten_text(query.get_user_query_msg(), int(max_history_size * INDIVIDUAL_PERCENTAGE))
