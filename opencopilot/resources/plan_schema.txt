@@ -11,8 +11,8 @@
             "short_description": {"type": "string"},
             "operator": {"type": "string", "enum": {{ operators }}},
             "status": { "type": "string", "enum": ["TODO"], "description": "For now, status must be the string TODO since tasks are not done yet"  },
-            "depends_on_output_of": {"type": "array","items": {"type": "integer"},"uniqueItems": true},
-            "previous_interactions": {"type": "array","items": {"type": "integer"},"uniqueItems": true,  "description":"If you want to include specific previous interactions for this task of the operator, include the interaction id here"},
+            "depends_on_output_of": {"type": "array","items": {"type": "integer"},"uniqueItems": true, "description": "Must be set even if empty"},
+            "previous_interactions": {"type": "array","items": {"type": "integer"},"uniqueItems": true,  "description":"Must be set if you want to include specific previous interactions for this task of the operator, include the interaction id here"},
             "detailed_purpose": {"type": "string",  "description": "Describe in details the task goal, input and expected output. Include any additional context and keywords that could help. If purpose depends on previous interactions, mention what needs to be done using them."},
             "result": {"type": "string", "default": "", "description": "Must be empty"}
           }
