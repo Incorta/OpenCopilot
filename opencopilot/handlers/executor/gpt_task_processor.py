@@ -41,7 +41,10 @@ def get_command_prompt_from_task(query_str, tasks, task_index, session, model, s
     tasks_count = task_index + 1
 
     tasks_subset = copy.deepcopy(tasks[:tasks_count])
-    formulated_tasks = formulate_tasks(tasks_subset, task["depends_on_output_of"], task_index)
+    if "depends_on_output_of" in tasks[task_index]:
+        formulated_tasks = formulate_tasks(tasks_subset, task["depends_on_output_of"], task_index)
+    else:
+        formulated_tasks = tasks
 
     history = {}
     if "previous_interactions" in tasks[task_index]:
