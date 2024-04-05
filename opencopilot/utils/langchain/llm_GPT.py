@@ -52,6 +52,7 @@ def extract_json_block(text):
         # Print the extracted JSON block
         return json.dumps(json_block_dict, indent=4)
     else:
+        print(text)
         raise APIFailureException("No JSON block found in the text.")
 
 
@@ -97,7 +98,7 @@ def run(messages, model):
         llm_reply = network.retry(lambda: llm(langchain_messages))
         consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
-    llm_reply_text = llm_reply.content
+    llm_reply_text = llm_reply.content.replace("\\_", "_")
     return extract_json_block(llm_reply_text), consumption_tracking, model_name
 
 
