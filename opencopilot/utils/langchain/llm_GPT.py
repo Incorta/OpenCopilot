@@ -106,8 +106,10 @@ def get_llm(model):
     if model["ai_provider"] == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
             openai_api_key=model["openai_text_completion_token"],
+            openai_api_base=model["openai_text_completion_endpoint"],
             model_name=model["openai_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
+            max_tokens=10000
         ), model["openai_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(

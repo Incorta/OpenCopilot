@@ -4,7 +4,7 @@ from enum import Enum
 class SupportedAIProviders(Enum):
     openai = {
         "provider_name": "openai",
-        "temperature": 0,
+        "temperature": 0.1,
         "prompts_paths": {
             "planner": {
                 "system": "resources/planner_level0_prompt_system.txt",
