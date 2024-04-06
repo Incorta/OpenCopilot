@@ -180,7 +180,12 @@ def construct_level_0_prompt(user_objective, context, user_session, model):
         "user_objective": user_objective
     })
 
-    planner_messages = [{"role": "user", "content": system_content + "\n" + user_content}]
+    planner_messages = [
+        {
+            "role": "user",
+            "content": system_content + user_content
+        }
+    ]
 
     return planner_messages, session_summary, plan_schema
 
