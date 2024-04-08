@@ -154,6 +154,7 @@ def formulate_operators_constraints(operators):
 
 
 def construct_level_0_prompt(user_objective, context, user_session, model):
+    session_summary = []
     session_summary_str = ""
     try:
         session_summary = summarize_session_queries(user_session)
