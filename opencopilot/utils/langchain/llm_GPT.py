@@ -109,7 +109,7 @@ def run(messages, model):
         except APIFailureException:
             retry_count += 1
             if retry_count < 2:
-                print(f"An APIFailureException occurred, retrying the call to {model['ai_provider'] + model_name}")
+                logger.system_message(f"An APIFailureException occurred, retrying the call to {model['ai_provider'] + model_name}")
                 langchain_messages[0].content += " "
                 sleep(5)
                 continue
