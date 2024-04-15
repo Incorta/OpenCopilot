@@ -150,7 +150,7 @@ def get_llm(model):
             endpoint=model.get("mistral_ai_text_completion_baseurl"),
             model=model["mistral_ai_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
-            max_tokens=4000,
+            max_tokens=8000,
             max_new_tokens=4000,
             stop=["[/INST]", "</s>"],
             top_p=0.1,
