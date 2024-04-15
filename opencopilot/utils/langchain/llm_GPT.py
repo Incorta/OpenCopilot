@@ -125,8 +125,9 @@ def run(messages, model):
 def get_llm(model):
     if model["ai_provider"] == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
-            openai_api_key=model["openai_text_completion_token"],
-            model_name=model["openai_text_completion_model_name"],
+            api_key=model["openai_text_completion_token"],
+            base_url=model.get("openai_text_completion_baseurl"),
+            model=model["openai_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
         ), model["openai_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
@@ -146,9 +147,9 @@ def get_llm(model):
         ), model["google_gemini_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.mistral.value["provider_name"]:
         return ChatMistralAI(
-            api_key=model["mistral_ai_text_completion_token"],
-            endpoint=model["mistral_ai_text_completion_baseurl"],
-            model=model["mistal_ai_text_completion_model_name"],
+            api_key=model.get("mistral_ai_text_completion_token"),
+            endpoint=model.get("mistral_ai_text_completion_baseurl"),
+            model=model["mistral_ai_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
             max_tokens=4000,
             max_new_tokens=4000,
@@ -156,6 +157,6 @@ def get_llm(model):
             top_p=0.1,
             cache=False,
             stream=False
-        ), model["mistal_ai_text_completion_model_name"]
+        ), model["mistral_ai_text_completion_model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
