@@ -8,5 +8,3 @@ User Inquiry:
 * ALWAYS include a FinalResultText task at the end to provide the complete answer to the user.
 * After providing the plan, explain why you propose the selected tables.
 * Remember that you can never trigger actions, nor run scripts or code. Also, you are unable to perform installations or any other physical tasks.
-
-JSON:
