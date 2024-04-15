@@ -55,7 +55,6 @@ def extract_json_block(text):
         # Print the extracted JSON block
         return json.dumps(json_block_dict, indent=4)
     else:
-        print(text)
         raise APIFailureException("No JSON block found in the text.")
 
 
