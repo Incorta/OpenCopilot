@@ -154,9 +154,14 @@ def formulate_operators_constraints(operators):
 
 
 def construct_level_0_prompt(user_objective, context, user_session, model):
-    session_summary = summarize_session_queries(user_session)
-    session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
-    session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
+    session_summary = []
+    session_summary_str = ""
+    try:
+        session_summary = summarize_session_queries(user_session)
+        session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
+        session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
+    except:
+        pass
     operators_names, operators_descriptions_str = get_operators_info(context)
     operators_constraints = formulate_operators_constraints(operators_names)
 
@@ -177,7 +182,12 @@ def construct_level_0_prompt(user_objective, context, user_session, model):
         "user_objective": user_objective
     })
 
-    planner_messages = [{"role": "user", "content": system_content + "\n" + user_content}]
+    planner_messages = [
+        {
+            "role": "user",
+            "content": system_content + user_content
+        }
+    ]
 
     return planner_messages, session_summary, plan_schema
 

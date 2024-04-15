@@ -1,4 +1,8 @@
 import json
+from time import sleep
+
+import langchain
+from langchain_mistralai import ChatMistralAI
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain.schema import (
     AIMessage,
@@ -8,16 +12,15 @@ from langchain.schema import (
 import opencopilot.utils.logger as logger
 from opencopilot.configs.LLM_Configurations import LLMConfigurations
 from opencopilot.configs.ai_providers import SupportedAIProviders, get_model_temperature
-from opencopilot.configs.env import use_human_for_gpt_4
 from opencopilot.utils import network
 from opencopilot.utils.consumption_tracker import ConsumptionTracker
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
-from opencopilot.utils.open_ai import common
 from opencopilot.configs.constants import LLMModelPriority
 from langchain_community.callbacks import get_openai_callback
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 llm_configs = None
+LLM_RETRY_COUNT = 3
 
 
 def initialize_configurations():
@@ -79,9 +82,6 @@ def run(messages, model):
     logger.system_message(str("Calling LLM-" + model["ai_provider"] + " " + model_name + " with: \n"))
     logger.operator_input(messages)
 
-    if use_human_for_gpt_4 and "gpt-4" in model_name:
-        return common.get_gpt_human_input(messages)
-
     # Convert messages object to langchain messages model - TODO: it is better to use those objects from the beginning
     langchain_messages = []
     for message in messages:
@@ -93,19 +93,40 @@ def run(messages, model):
         elif message["role"] == "assistant":
             langchain_messages.append(AIMessage(content=content))
 
-    with get_openai_callback() as cb:
-        llm_reply = network.retry(lambda: llm(langchain_messages))
-        consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
+    retry_count = 0
+    while retry_count < LLM_RETRY_COUNT:
+        try:
+            with get_openai_callback() as cb:
+                # langchain.verbose = True
+                # langchain.debug = True
+                langchain.llm_cache = None
+                llm_reply = network.retry(lambda: llm.invoke(langchain_messages))
+                print(llm_reply) # Has the finish reason
+                consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
-    llm_reply_text = llm_reply.content
-    return extract_json_block(llm_reply_text), consumption_tracking, model_name
+            llm_reply_text = llm_reply.content.replace("\\_", "_")  # to handle Mixtral tendency to escape underscores
+            response = extract_json_block(llm_reply_text)
+            break
+        except APIFailureException:
+            retry_count += 1
+            if retry_count < LLM_RETRY_COUNT:
+                logger.system_message(f"[FAIL {retry_count}]: An APIFailureException occurred, retrying the call to {model['ai_provider'] + model_name}")
+                langchain_messages[0].content += " NOTE: Don't include double new line -> \\n\\n in the response"
+                llm.temperature += 0.1
+                sleep(5)
+                continue
+            else:  # If it's the third failure, re-raise the exception
+                raise
+
+    return response, consumption_tracking, model_name
 
 
 def get_llm(model):
     if model["ai_provider"] == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
-            openai_api_key=model["openai_text_completion_token"],
-            model_name=model["openai_text_completion_model_name"],
+            api_key=model["openai_text_completion_token"],
+            base_url=model.get("openai_text_completion_baseurl"),
+            model=model["openai_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
         ), model["openai_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
@@ -123,5 +144,18 @@ def get_llm(model):
             temperature=get_model_temperature(model["ai_provider"]),
             convert_system_message_to_human=True
         ), model["google_gemini_text_completion_model_name"]
+    elif model["ai_provider"] == SupportedAIProviders.mistral.value["provider_name"]:
+        return ChatMistralAI(
+            api_key=model.get("mistral_ai_text_completion_token"),
+            endpoint=model.get("mistral_ai_text_completion_baseurl"),
+            model=model["mistral_ai_text_completion_model_name"],
+            temperature=get_model_temperature(model["ai_provider"]),
+            max_tokens=8000,
+            max_new_tokens=4000,
+            stop=["[/INST]", "</s>"],
+            top_p=0.1,
+            cache=False,
+            stream=False
+        ), model["mistral_ai_text_completion_model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
