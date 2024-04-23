@@ -2,7 +2,6 @@ import json
 from time import sleep
 
 import langchain
-from langchain_mistralai import ChatMistralAI
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain.schema import (
     AIMessage,
@@ -145,17 +144,12 @@ def get_llm(model):
             convert_system_message_to_human=True
         ), model["google_gemini_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.mistral.value["provider_name"]:
-        return ChatMistralAI(
+        return ChatOpenAI(
             api_key=model.get("mistral_ai_text_completion_token"),
-            endpoint=model.get("mistral_ai_text_completion_baseurl"),
+            base_url=model.get("mistral_ai_text_completion_baseurl"),
             model=model["mistral_ai_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
-            max_tokens=8000,
-            max_new_tokens=4000,
-            stop=["[/INST]", "</s>"],
-            top_p=0.1,
             cache=False,
-            stream=False
         ), model["mistral_ai_text_completion_model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
