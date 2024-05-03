@@ -129,25 +129,23 @@ def summarize_session_queries(user_session, max_history_size=2000):
 def get_operators_info(context):
     if context is not None:
         operators = operators_handler_module.op_functions_resolver(context)
-        operators_keys = operators
     else:
         operators = operators_handler_module.op_functions
-        operators_keys = [str(key) for key in operators_handler_module.op_functions.keys()]
 
     operators_descriptions_str = ""
-    for operator in operators:
+    for operator_key, operator_obj in operators.items():
         operators_descriptions_str += (
-                "- " + operators_handler_module.op_functions[operator]["operator_name"] + " --> "
-                + "(" + operator + ") " + operators_handler_module.op_functions[operator]["description"] + "\n")
+                "- " + operator_obj["operator_name"] + " --> "
+                + "(" + operator_key + ") " + operator_obj["description"] + "\n")
 
-    return operators_keys, operators_descriptions_str
+    return operators, operators_descriptions_str
 
 
 def formulate_operators_constraints(operators):
     operators_constraints_str = ""
     for operator in operators:
-        if "constraints" in operators_handler_module.op_functions[operator] and operators_handler_module.op_functions[operator]["constraints"]:
-            for constraint in operators_handler_module.op_functions[operator]["constraints"]:
+        if "constraints" in operators[operator] and operators[operator]["constraints"]:
+            for constraint in operators[operator]["constraints"]:
                 operators_constraints_str += "\n - " + constraint
 
     return operators_constraints_str
@@ -162,18 +160,18 @@ def construct_level_0_prompt(user_objective, context, user_session, model):
         session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
     except:
         pass
-    operators_names, operators_descriptions_str = get_operators_info(context)
-    operators_constraints = formulate_operators_constraints(operators_names)
+    supported_operators, operators_descriptions_str = get_operators_info(context)
+    operators_constraints = formulate_operators_constraints(supported_operators)
 
     plan_schema = jinja_utils.load_template("resources/plan_schema.txt", {
         "service_name": operators_handler_module.service_name,
-        "operators": json.dumps(operators_names)
+        "operators": supported_operators.keys()
     })
     system_content = jinja_utils.load_template(get_planner_prompt_file_path(model["ai_provider"], "system"), {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.service_name,
         "op_descriptions": operators_descriptions_str,
-        "operators": operators_names,
+        "operators": supported_operators.keys(),
         "plan_schema": plan_schema,
         "op_constraints": operators_constraints
     })
@@ -189,14 +187,14 @@ def construct_level_0_prompt(user_objective, context, user_session, model):
         }
     ]
 
-    return planner_messages, session_summary, plan_schema
+    return planner_messages, session_summary, plan_schema, supported_operators
 
 
 def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response):
     model = resolve_llm_model(planner_llm_models_list)
 
     # Construct planner request
-    planner_messages, session_summary, _ = construct_level_0_prompt(user_objective, session_query.get_context(), user_session, model)
+    planner_messages, session_summary, _, supported_operators = construct_level_0_prompt(user_objective, session_query.get_context(), user_session, model)
     session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response
@@ -229,4 +227,4 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     logger.system_message("Got the following plan from the planning agent:")
     logger.print_tasks(tasks)
 
-    return tasks, session_summary
+    return tasks, session_summary, supported_operators
