@@ -144,12 +144,12 @@ def get_llm(model):
             temperature=get_model_temperature(model["ai_provider"]),
             convert_system_message_to_human=True
         ), model["google_gemini_text_completion_model_name"]
-    elif model["ai_provider"] == SupportedAIProviders.mistral.value["provider_name"]:  # TODO The provider name should be changed later
-        os.environ["TEAM_API_KEY"] = model["mistral_ai_text_completion_token"]
+    elif model["ai_provider"] == SupportedAIProviders.aixplain.value["provider_name"]:
+        os.environ["TEAM_API_KEY"] = model["aixplain_text_completion_token"]
         from opencopilot.utils.langchain.aixplain import AixplainChatModel
         return AixplainChatModel(
-            model_id=model["mistral_ai_text_completion_model_name"],
+            model_id=model["aixplain_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"])
-        ), model["mistral_ai_text_completion_model_name"]
+        ), model["aixplain_text_completion_model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
