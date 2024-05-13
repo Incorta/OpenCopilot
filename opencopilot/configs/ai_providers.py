@@ -35,8 +35,8 @@ class SupportedAIProviders(Enum):
             "executor": "resources/tasks_to_command_prompt.txt"
         }
     }
-    mistral = {
-        "provider_name": "mistral",
+    aixplain = {
+        "provider_name": "aixplain",
         "temperature": 0.1,
         "prompts_paths": {
             "planner": {

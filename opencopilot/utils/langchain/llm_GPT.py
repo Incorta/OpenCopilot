@@ -1,4 +1,5 @@
 import json
+import os
 from time import sleep
 
 import langchain
@@ -100,7 +101,7 @@ def run(messages, model):
                 # langchain.debug = True
                 langchain.llm_cache = None
                 llm_reply = network.retry(lambda: llm.invoke(langchain_messages))
-                print(llm_reply) # Has the finish reason
+                # print(llm_reply) # Has the finish reason
                 consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
             llm_reply_text = llm_reply.content.replace("\\_", "_")  # to handle Mixtral tendency to escape underscores
@@ -143,13 +144,12 @@ def get_llm(model):
             temperature=get_model_temperature(model["ai_provider"]),
             convert_system_message_to_human=True
         ), model["google_gemini_text_completion_model_name"]
-    elif model["ai_provider"] == SupportedAIProviders.mistral.value["provider_name"]:
-        return ChatOpenAI(
-            api_key=model.get("mistral_ai_text_completion_token"),
-            base_url=model.get("mistral_ai_text_completion_baseurl"),
-            model=model["mistral_ai_text_completion_model_name"],
-            temperature=get_model_temperature(model["ai_provider"]),
-            cache=False,
-        ), model["mistral_ai_text_completion_model_name"]
+    elif model["ai_provider"] == SupportedAIProviders.aixplain.value["provider_name"]:
+        os.environ["TEAM_API_KEY"] = model["aixplain_text_completion_token"]
+        from opencopilot.utils.langchain.aixplain import AixplainChatModel
+        return AixplainChatModel(
+            model_id=model["aixplain_text_completion_model_name"],
+            temperature=get_model_temperature(model["ai_provider"])
+        ), model["aixplain_text_completion_model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
