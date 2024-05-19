@@ -122,16 +122,17 @@ def run(messages, model):
 
 
 def get_llm(model):
+    logger.info(model)
     if model["ai_provider"] == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
-            api_key=model["openai_text_completion_token"],
+            api_key=model["openai_text_completion_key"],
             base_url=model.get("openai_text_completion_baseurl"),
             model=model["openai_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
         ), model["openai_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(
-            openai_api_key=model["azure_openai_text_completion_token"],
+            openai_api_key=model["azure_openai_text_completion_key"],
             openai_api_version="2023-05-15",
             azure_endpoint=model["azure_openai_text_completion_endpoint"],
             deployment_name=model["azure_openai_text_completion_deployment_name"],
@@ -140,16 +141,16 @@ def get_llm(model):
     elif model["ai_provider"] == SupportedAIProviders.google_gemini.value["provider_name"]:
         return ChatGoogleGenerativeAI(
             model=model["google_gemini_text_completion_model_name"],
-            google_api_key=model["google_gemini_text_completion_token"],
+            google_api_key=model["google_gemini_text_completion_key"],
             temperature=get_model_temperature(model["ai_provider"]),
             convert_system_message_to_human=True
         ), model["google_gemini_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.aixplain.value["provider_name"]:
-        os.environ["TEAM_API_KEY"] = model["aixplain_text_completion_token"]
+        os.environ["TEAM_API_KEY"] = model["aixplain_text_completion_key"]
         from opencopilot.utils.langchain.aixplain import AixplainChatModel
         return AixplainChatModel(
-            model_id=model["aixplain_text_completion_model_name"],
+            model_id=model["aixplain_text_completion_model_id"],
             temperature=get_model_temperature(model["ai_provider"])
-        ), model["aixplain_text_completion_model_name"]
+        ), model["aixplain_text_completion_model_id"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
