@@ -5,4 +5,4 @@ User Inquiry:
 **Output:**
 * Request: Describe and analyze the user request
 * Thinking: Determine the minimal set of tasks required for the plan and the rational behind each one
-* Create a json object that contains a list of tasks leveraging the available operators to provide a solution to the query. ALWAYS include a FinalResultText task at the end to provide the complete answer to the user.
+* Create a json object that contains a list of tasks leveraging the available operators to provide a solution to the query.
