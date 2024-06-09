@@ -9,6 +9,11 @@ Previous Interactions:
 
 The user inquiry is: {{ query_str }}
 
+{% if context != "" %}
+User context:
+{{ context }}
+{% endif %}
+
 The list of tasks prepared by {{ service_name }} Operator is:
 {{ tasks }}
 
