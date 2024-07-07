@@ -1,5 +1,5 @@
 import time
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Dict, Text
 
 from langchain_community.adapters.openai import (
     convert_message_to_dict,
@@ -14,6 +14,7 @@ from langchain_core.messages import (
     BaseMessage,
 )
 from langchain_core.outputs import ChatGeneration, ChatResult
+from langchain_core.messages import AIMessage, SystemMessage
 
 from aixplain.factories import ModelFactory
 from aixplain.enums import Function
@@ -38,14 +39,20 @@ class AixplainChatModel(BaseChatModel):
     temperature: float = 0
     """The temperature to use for the model"""
 
+    top_p: float = 0.9999
+    """The top_p to use for the model"""
+
     max_tokens: int = 1024
     """The maximum number of tokens to generate"""
 
-    def __run_aixplain_llm(self, turns: List):
+    def __run_aixplain_llm(self, data: Text, context: Optional[Text] = None,
+                           history: Optional[List[Dict]] = None):
         """Run the aiXplain language model with the given turns and tools.
 
         Args:
-            turns (List): The list of turns to run the model with.
+            data (Union[Text, Dict]): Text to LLM or last user utterance of a conversation.
+            context (Optional[Text], optional): System message. Defaults to None.
+            history (Optional[List[Dict]], optional): Conversation history in OpenAI format ([{ "role": "assistant", "content": "Hello, world!"}]). Defaults to None.
 
         Returns:
             dict: The response from the aiXplain language model.
@@ -53,7 +60,7 @@ class AixplainChatModel(BaseChatModel):
         start = time.time()
         llm = ModelFactory.get(self.model_id)
         assert llm.function == Function.TEXT_GENERATION, "Please select a text generation model."
-        response = llm.run(turns, parameters={"temperature": self.temperature, "max_tokens": self.max_tokens})
+        response = llm.run(data=data, history=history, context=context, temperature=self.temperature, top_p=self.top_p, max_tokens=self.max_tokens)
         if response["status"] != "SUCCESS":
             response["data"] = "Sorry, I am not able to generate a response at the moment. Please try again later."
         if "runTime" not in response:
@@ -83,9 +90,23 @@ class AixplainChatModel(BaseChatModel):
                   downstream and understand why generation stopped.
             run_manager: A run manager with callbacks for the LLM.
         """
-        message_dicts = [convert_message_to_dict(m) for m in messages]
-
-        model_response = self.__run_aixplain_llm(message_dicts, **kwargs)
+        assert len(messages) > 0, "You must provide at least one message."
+        context = None
+        history = []
+        for idx in range(len(messages) - 1):
+            message = messages[idx]
+            if type(message) is SystemMessage:
+                context = message.content
+            else:
+                history.append(message)
+        data = messages[-1].content
+        history = [convert_message_to_dict(m) for m in history]
+        history = history if len(history) > 0 else None
+        print(f"Context: {context}")
+        print(f"History: {history}")
+        print(f"Data: {data}")
+        model_response = self.__run_aixplain_llm(data=data, context=context,
+                                                 history=history, **kwargs)
         print(f"Model response: {model_response}")
         tokens = model_response['data']
 
