@@ -10,4 +10,4 @@ langchain-openai~=0.1.1
 langchain-google-genai~=0.0.9
 langchain_community==0.0.32
 google-generativeai~=0.3.2
-aiXplain==0.2.12
+aiXplain==0.2.14
