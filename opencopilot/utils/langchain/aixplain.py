@@ -60,7 +60,7 @@ class AixplainChatModel(BaseChatModel):
         start = time.time()
         llm = ModelFactory.get(self.model_id)
         assert llm.function == Function.TEXT_GENERATION, "Please select a text generation model."
-        response = llm.run(data=data, history=history, context=context, temperature=self.temperature, top_p=self.top_p, max_tokens=self.max_tokens)
+        response = llm.run(data={"data": data}, history=history, context=context, temperature=self.temperature, top_p=self.top_p, max_tokens=self.max_tokens)
         if response["status"] != "SUCCESS":
             response["data"] = "Sorry, I am not able to generate a response at the moment. Please try again later."
         if "runTime" not in response:
