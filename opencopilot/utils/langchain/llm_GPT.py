@@ -150,7 +150,8 @@ def get_llm(model):
         from opencopilot.utils.langchain.aixplain import AixplainChatModel
         return AixplainChatModel(
             model_id=model["aixplain_text_completion_model_id"],
-            temperature=get_model_temperature(model["ai_provider"])
+            temperature=get_model_temperature(model["ai_provider"]),
+            max_tokens=4096
         ), model["aixplain_text_completion_model_id"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")

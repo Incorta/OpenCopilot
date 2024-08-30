@@ -10,7 +10,6 @@ from langchain_core.callbacks import (
 )
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import (
-    AIMessage,
     BaseMessage,
 )
 from langchain_core.outputs import ChatGeneration, ChatResult
@@ -102,12 +101,12 @@ class AixplainChatModel(BaseChatModel):
         data = messages[-1].content
         history = [convert_message_to_dict(m) for m in history]
         history = history if len(history) > 0 else None
-        print(f"Context: {context}")
-        print(f"History: {history}")
-        print(f"Data: {data}")
+        # print(f"Context: {context}")
+        # print(f"History: {history}")
+        # print(f"Data: {data}")
         model_response = self.__run_aixplain_llm(data=data, context=context,
                                                  history=history, **kwargs)
-        print(f"Model response: {model_response}")
+        # print(f"Model response: {model_response}")
         tokens = model_response['data']
 
         message = AIMessage(
