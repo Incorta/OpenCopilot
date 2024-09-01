@@ -1,5 +1,7 @@
 import json
 import os
+import gzip
+import sys
 import logging
 from logging.handlers import RotatingFileHandler
 from termcolor import colored
@@ -25,22 +27,39 @@ all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COL
               COLOR_LIGHT_YELLOW, COLOR_LIGHT_BLUE, COLOR_LIGHT_MAGENTA, COLOR_LIGHT_CYAN]
 
 
+class GZipRotatingFileHandler(RotatingFileHandler):
+    def doRollover(self):
+        super().doRollover()
+        if self.backupCount > 0:
+            for i in range(self.backupCount - 1, 0, -1):
+                sfn = f"{self.baseFilename}.{i}.gz"
+                dfn = f"{self.baseFilename}.{i + 1}.gz"
+                if os.path.exists(sfn):
+                    if os.path.exists(dfn):
+                        os.remove(dfn)
+                    os.rename(sfn, dfn)
+            dfn = f"{self.baseFilename}.1.gz"
+            if os.path.exists(dfn):
+                os.remove(dfn)
+            with open(self.baseFilename, 'rb') as f_in, gzip.open(dfn, 'wb') as f_out:
+                f_out.writelines(f_in)
+            os.remove(self.baseFilename)
+
 def setup_logger():
     global __internal_logger
     if __internal_logger is not None:
         return __internal_logger
+    
     # Read the COPILOT_LOG_LEVEL environment variable
     log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "ERROR")
-
-    # Convert log level string to integer value
     log_level = getattr(logging, log_level_str.upper(), logging.ERROR)
 
     # Set up the logging configuration with a rotating file handler
     logs_path = os.environ.get("COPILOT_LOG_PATH", "")
     log_file = os.path.join(logs_path, 'app.log')
 
-    max_file_size_bytes = 1024 * 1024 * 256  # 256 MB
-    backup_count = 3  # Number of backup files to keep
+    max_file_size_bytes = 1024 * 1024 * 128  # 128 MB
+    backup_count = 30  # Number of backup files to keep
 
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 
@@ -49,8 +68,8 @@ def setup_logger():
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    # Create a rotating file handler
-    rotating_handler = RotatingFileHandler(log_file, maxBytes=max_file_size_bytes, backupCount=backup_count)
+    # Create a rotating file handler that compresses old log files
+    rotating_handler = GZipRotatingFileHandler(log_file, maxBytes=max_file_size_bytes, backupCount=backup_count)
     rotating_handler.setFormatter(formatter)
 
     # Create a logger and add the rotating file handler
@@ -58,7 +77,25 @@ def setup_logger():
     __internal_logger.addHandler(rotating_handler)
     __internal_logger.setLevel(log_level)
 
+    # Redirect stdout and stderr to the logger
+    sys.stdout = StreamToLogger(__internal_logger, logging.INFO)
+    sys.stderr = StreamToLogger(__internal_logger, logging.ERROR)
+
     return __internal_logger
+
+class StreamToLogger(object):
+    def __init__(self, logger, log_level):
+        self.logger = logger
+        self.log_level = log_level
+        self.linebuf = ''
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.log_level, line.rstrip())
+
+    def flush(self):
+        pass
+
 
 
 __internal_logger = None
