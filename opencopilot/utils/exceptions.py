@@ -16,3 +16,8 @@ class UnauthorizedUserException(Exception):
 
 class UnsupportedAIProviderException(Exception):
     pass
+
+
+class LLMException(Exception):
+    """Base class for exceptions related to LLM operations."""
+    pass
