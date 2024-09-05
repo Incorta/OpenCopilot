@@ -111,10 +111,10 @@ def run(messages, model):
                 sleep(5)
                 continue
             else:  # If it's the third failure, re-raise the exception
-                raise LLMException("Error from LLM service") from e
+                raise LLMException(f"LLM encountered an error: {str(e)}") from e
 
         except Exception as e:
-            raise LLMException("Error from LLM service") from e
+            raise LLMException(f"LLM encountered an error: {str(e)}") from e
 
 
 def get_llm(model):
