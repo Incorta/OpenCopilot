@@ -12,9 +12,8 @@ from langchain.schema import (
 import opencopilot.utils.logger as logger
 from opencopilot.configs.LLM_Configurations import LLMConfigurations
 from opencopilot.configs.ai_providers import SupportedAIProviders, get_model_temperature
-from opencopilot.utils import network
 from opencopilot.utils.consumption_tracker import ConsumptionTracker
-from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException
+from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException, LLMException
 from opencopilot.configs.constants import LLMModelPriority
 from langchain_community.callbacks import get_openai_callback
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -97,28 +96,25 @@ def run(messages, model):
     while retry_count < LLM_RETRY_COUNT:
         try:
             with get_openai_callback() as cb:
-                # langchain.verbose = True
-                # langchain.debug = True
                 langchain.llm_cache = None
-                llm_reply = network.retry(lambda: llm.invoke(langchain_messages))
-                # print(llm_reply) # Has the finish reason
+                llm_reply = llm.invoke(langchain_messages)
                 consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
             llm_reply_text = llm_reply.content.replace("\\_", "_")  # to handle Mixtral tendency to escape underscores
             response = extract_json_block(llm_reply_text)
-            break
-        except APIFailureException:
+            return response, consumption_tracking, model_name
+        except APIFailureException as e:
             retry_count += 1
             if retry_count < LLM_RETRY_COUNT:
                 logger.system_message(f"[FAIL {retry_count}]: An APIFailureException occurred, retrying the call to {model['ai_provider'] + model_name}")
-                langchain_messages[0].content += " NOTE: Don't include double new line -> \\n\\n in the response"
                 llm.temperature += 0.1
                 sleep(5)
                 continue
             else:  # If it's the third failure, re-raise the exception
-                raise
+                raise LLMException(f"LLM encountered an error: {str(e)}") from e
 
-    return response, consumption_tracking, model_name
+        except Exception as e:
+            raise LLMException(f"LLM encountered an error: {str(e)}") from e
 
 
 def get_llm(model):
