@@ -21,3 +21,4 @@ class UnsupportedAIProviderException(Exception):
 class LLMException(Exception):
     """Base class for exceptions related to LLM operations."""
     pass
+    
