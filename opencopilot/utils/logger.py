@@ -1,10 +1,12 @@
-import json
 import os
-import gzip
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
 from termcolor import colored
+import json
+import zipfile
+from datetime import datetime
+import glob
 
 COLOR_BLACK = "black"
 COLOR_RED = "red"
@@ -14,36 +16,96 @@ COLOR_BLUE = "blue"
 COLOR_MAGENTA = "magenta"
 COLOR_CYAN = "cyan"
 COLOR_WHITE = "white"
-COLOR_LIGHT_GREY = "light_grey"
-COLOR_DARK_GREY = "dark_grey"
-COLOR_LIGHT_RED = "light_red"
-COLOR_LIGHT_GREEN = "light_green"
-COLOR_LIGHT_YELLOW = "light_yellow"
-COLOR_LIGHT_BLUE = "light_blue"
-COLOR_LIGHT_MAGENTA = "light_magenta"
-COLOR_LIGHT_CYAN = "light_cyan"
+COLOR_GREY = "grey"
 
-all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_LIGHT_GREY, COLOR_DARK_GREY, COLOR_LIGHT_RED, COLOR_LIGHT_GREEN,
-              COLOR_LIGHT_YELLOW, COLOR_LIGHT_BLUE, COLOR_LIGHT_MAGENTA, COLOR_LIGHT_CYAN]
+all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_GREY]
 
+class ZipRotatingFileHandler(RotatingFileHandler):
+    def __init__(self, filename, mode='a', maxBytes=0, backupCount=0, encoding=None, delay=False):
+        super().__init__(filename, mode, maxBytes, backupCount, encoding, delay)
+        self.rotator = self.rotate_file
+        self.max_zips = backupCount
 
-class GZipRotatingFileHandler(RotatingFileHandler):
+    def rotate_file(self, source, dest):
+        if os.path.exists(source):
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            base_path = os.path.splitext(dest)[0]
+            zip_filename = f"{base_path}_{timestamp}.zip"
+            
+            try:
+                with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
+                    zipf.write(source, os.path.basename(source))
+                
+                # After successful compression, delete the original log file
+                os.remove(source)
+                
+                # Check and maintain the zip file limit
+                self.maintain_zip_limit(base_path)
+                
+            except Exception as e:
+                print(f"Error zipping log file: {e}")
+
+    def maintain_zip_limit(self, base_path):
+        # Get all zip files with the base path
+        zip_pattern = f"{base_path}_*.zip"
+        zip_files = glob.glob(zip_pattern)
+        
+        # Sort zip files by modification time (oldest first)
+        zip_files.sort(key=os.path.getmtime)
+        
+        # Remove oldest files if we exceed the limit
+        while len(zip_files) > self.max_zips:
+            oldest_file = zip_files.pop(0)
+            try:
+                os.remove(oldest_file)
+                print(f"Deleted old log zip: {oldest_file}")
+            except Exception as e:
+                print(f"Error deleting old log zip {oldest_file}: {e}")
+
     def doRollover(self):
-        super().doRollover()
+        if self.stream:
+            self.stream.close()
+            self.stream = None
         if self.backupCount > 0:
             for i in range(self.backupCount - 1, 0, -1):
-                sfn = f"{self.baseFilename}.{i}.gz"
-                dfn = f"{self.baseFilename}.{i + 1}.gz"
+                sfn = self.rotation_filename("%s.%d" % (self.baseFilename, i))
+                dfn = self.rotation_filename("%s.%d" % (self.baseFilename, i + 1))
                 if os.path.exists(sfn):
                     if os.path.exists(dfn):
                         os.remove(dfn)
                     os.rename(sfn, dfn)
-            dfn = f"{self.baseFilename}.1.gz"
+            dfn = self.rotation_filename(self.baseFilename + ".1")
             if os.path.exists(dfn):
                 os.remove(dfn)
-            with open(self.baseFilename, 'rb') as f_in, gzip.open(dfn, 'wb') as f_out:
-                f_out.writelines(f_in)
-            os.remove(self.baseFilename)
+            self.rotate_file(self.baseFilename, dfn)
+        if not self.delay:
+            self.stream = self._open()
+
+
+class StreamToLogger(object):
+    def __init__(self, logger, log_level, original_stream):
+        self.logger = logger
+        self.log_level = log_level
+        self.linebuf = ''
+        self.original_stream = original_stream
+
+    def write(self, buf):
+        for line in buf.rstrip().splitlines():
+            self.logger.log(self.log_level, line.rstrip())
+        self.original_stream.write(buf)  # Write to the original stream as well
+
+    def flush(self):
+        for handler in self.logger.handlers:
+            handler.flush()
+        self.original_stream.flush()  # Flush the original stream as well
+
+__internal_logger = None  # Ensure global declaration here
+
+def get_logger():
+    global __internal_logger
+    if __internal_logger is None:
+        __internal_logger = setup_logger()  # Ensure logger is set up
+    return __internal_logger
 
 def setup_logger():
     global __internal_logger
@@ -69,7 +131,7 @@ def setup_logger():
         os.makedirs(log_dir)
 
     # Create a rotating file handler that compresses old log files
-    rotating_handler = GZipRotatingFileHandler(log_file, maxBytes=max_file_size_bytes, backupCount=backup_count)
+    rotating_handler = ZipRotatingFileHandler(log_file, maxBytes=max_file_size_bytes, backupCount=backup_count)
     rotating_handler.setFormatter(formatter)
 
     # Create a logger and add the rotating file handler
@@ -78,81 +140,52 @@ def setup_logger():
     __internal_logger.setLevel(log_level)
 
     # Redirect stdout and stderr to the logger
-    sys.stdout = StreamToLogger(__internal_logger, logging.INFO)
-    sys.stderr = StreamToLogger(__internal_logger, logging.ERROR)
+    sys.stdout = StreamToLogger(__internal_logger, logging.INFO, sys.stdout)
+    sys.stderr = StreamToLogger(__internal_logger, logging.ERROR, sys.stderr)
 
     return __internal_logger
 
-class StreamToLogger(object):
-    def __init__(self, logger, log_level):
-        self.logger = logger
-        self.log_level = log_level
-        self.linebuf = ''
-
-    def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self.logger.log(self.log_level, line.rstrip())
-
-    def flush(self):
-        pass
-
-
-
-__internal_logger = None
-setup_logger()
-
+def print_colored(message, color):
+    if get_logger().isEnabledFor(logging.INFO):  # Always use get_logger() to ensure it's initialized
+        print(colored(message, color))
 
 def print_all_colors():
     for color in all_colors:
         print_colored(f"Hello world!: {color}", color)
 
-
 def info(message):
-    print_colored(message, COLOR_LIGHT_GREEN)
-    __internal_logger.info(message)
-
+    print_colored(message, COLOR_GREEN)
+    get_logger().info(message)
 
 def trace(message):
     print_colored(message, COLOR_YELLOW)
-    __internal_logger.trace(message)
-
+    get_logger().debug(message)
 
 def error(message):
     print_colored(message, COLOR_RED)
-    __internal_logger.error(message)
-
+    get_logger().error(message)
 
 def operator_response(message):
-    print_colored(message, COLOR_DARK_GREY)
-    __internal_logger.debug(message)
-
+    print_colored(message, COLOR_GREY)
+    get_logger().debug(message)
 
 def operator_input(message):
-    print_colored(message, COLOR_DARK_GREY)
-    __internal_logger.debug(message)
-
+    operator_response(message)
 
 def system_message(message):
     print_colored(message, COLOR_BLUE)
-    __internal_logger.debug(message)
-
+    get_logger().debug(message)
 
 def predefined_message(message):
     print_colored(message, COLOR_MAGENTA)
-    __internal_logger.debug(message)
-
-
-def print_colored(message, color):
-    if __internal_logger.isEnabledFor(logging.INFO):
-        print(colored(message, color))
-
+    get_logger().debug(message)
 
 def print_tasks(tasks_json_array):
     for task in tasks_json_array:
-        color = COLOR_YELLOW if task["status"] == "TODO" else COLOR_GREEN
-        print_colored(json.dumps(task), color)
-        __internal_logger.debug(json.dumps(task))
-
+        color = COLOR_YELLOW if task.get("status") == "TODO" else COLOR_GREEN
+        task_json = json.dumps(task, indent=2)
+        print_colored(task_json, color)
+        get_logger().debug(task_json)
 
 def print_gpt_messages(messages):
     for message in messages:
