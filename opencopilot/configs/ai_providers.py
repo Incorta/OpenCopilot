@@ -3,7 +3,7 @@ from enum import Enum
 
 class SupportedAIProviders(Enum):
     openai = {
-        "provider_name": "openai",
+        "provider_name": "openai_api",
         "temperature": 0.1,
         "prompts_paths": {
             "planner": {

@@ -121,11 +121,11 @@ def get_llm(model):
     logger.info(model)
     if model["ai_provider"] == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
-            api_key=model["openai_text_completion_key"],
-            base_url=model.get("openai_text_completion_baseurl"),
-            model=model["openai_text_completion_model_name"],
+            api_key=model["openai_api_text_completion_key"],
+            base_url=model.get("openai_api_text_completion_baseurl"),
+            model=model["openai_api_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
-        ), model["openai_text_completion_model_name"]
+        ), model["openai_api_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(
             openai_api_key=model["azure_openai_text_completion_key"],
