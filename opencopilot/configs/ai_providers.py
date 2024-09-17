@@ -1,5 +1,7 @@
 from enum import Enum
 
+from opencopilot.utils.exceptions import ProviderNotFoundException
+
 
 class SupportedAIProviders(Enum):
     openai = {
@@ -52,7 +54,8 @@ def get_model_by_name(provider_name):
     for model in SupportedAIProviders:
         if model.value['provider_name'] == provider_name:
             return model
-    return None
+
+    raise ProviderNotFoundException(f"Model AI Provider with name '{provider_name}' is not found. Review your model configurations and try again.")
 
 
 def get_model_temperature(provider_name):
