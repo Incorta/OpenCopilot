@@ -154,7 +154,6 @@ def print_all_colors():
         print_colored(f"Hello world!: {color}", color)
 
 def info(message):
-    print_colored(message, COLOR_GREEN)
     get_logger().info(message)
 
 def trace(message):
