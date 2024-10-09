@@ -139,8 +139,7 @@ def setup_logger():
     __internal_logger.addHandler(rotating_handler)
     __internal_logger.setLevel(log_level)
 
-    # Redirect stdout and stderr to the logger
-    sys.stdout = StreamToLogger(__internal_logger, logging.INFO, sys.stdout)
+    # Redirect stderr to the logger
     sys.stderr = StreamToLogger(__internal_logger, logging.ERROR, sys.stderr)
 
     return __internal_logger
@@ -154,6 +153,7 @@ def print_all_colors():
         print_colored(f"Hello world!: {color}", color)
 
 def info(message):
+    print_colored(message, COLOR_GREEN)
     get_logger().info(message)
 
 def trace(message):
@@ -165,7 +165,7 @@ def error(message):
     get_logger().error(message)
 
 def operator_response(message):
-    print_colored(message, COLOR_GREY)
+    print_colored(message, COLOR_CYAN)
     get_logger().debug(message)
 
 def operator_input(message):
