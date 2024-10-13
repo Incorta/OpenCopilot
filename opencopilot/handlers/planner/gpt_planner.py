@@ -224,7 +224,4 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     else:
         raise UnknownCommandError(f"Unexpected format for the tasks: {planned_tasks}")
 
-    logger.system_message("Got the following plan from the planning agent:")
-    logger.print_tasks(tasks)
-
     return tasks, session_summary, supported_operators
