@@ -1,9 +1,11 @@
+import copy
 import importlib
 from collections import deque
 
 from opencopilot.configs.constants import Operator, Result
 from opencopilot.configs import constants
 from opencopilot.configs.env import operators_path
+from opencopilot.utils.tokens_counter import count_prompt_tokens
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 planner_llm_models_list = [constants.LLMModelPriority.primary_model.value, constants.LLMModelPriority.secondary_model.value]
@@ -50,7 +52,7 @@ def summarize_session_queries(user_session, max_history_size=1000):
             process_result_for_summary = operators_handler_module.op_functions[operator].get("executor_args").get("process_result_for_summary", None)
             # Check if there's a function to process the result
             if process_result_for_summary:
-                query_result = process_result_for_summary(tasks)
+                query_result = process_result_for_summary(copy.deepcopy(tasks))
 
             # Use the raw result if no processing function is found
             else:
@@ -60,7 +62,7 @@ def summarize_session_queries(user_session, max_history_size=1000):
         else:
             query_result = ""
 
-        query_length = len(query_msg) + len(query_result)
+        query_length = count_prompt_tokens(query_msg + query_result)
 
         # Add the new query and result to the queue
         summary_queue.append({
@@ -72,7 +74,7 @@ def summarize_session_queries(user_session, max_history_size=1000):
         # If the total length exceeds max_history_size, remove the oldest queries
         while total_length > max_history_size and summary_queue:
             oldest_query = summary_queue.popleft()
-            total_length -= len(oldest_query["user_query_msg"]) + len(oldest_query["reply"])
+            total_length -= count_prompt_tokens(oldest_query["user_query_msg"] + oldest_query["reply"])
 
     # Convert the deque to a list before returning
     return list(summary_queue)
