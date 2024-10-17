@@ -62,7 +62,7 @@ def summarize_session_queries(user_session, max_history_size=1000):
         else:
             query_result = ""
 
-        query_length = count_prompt_tokens(query_msg + query_result)
+        query_length = count_prompt_tokens(query_msg) + count_prompt_tokens(query_result)
 
         # Add the new query and result to the queue
         summary_queue.append({
@@ -74,7 +74,7 @@ def summarize_session_queries(user_session, max_history_size=1000):
         # If the total length exceeds max_history_size, remove the oldest queries
         while total_length > max_history_size and summary_queue:
             oldest_query = summary_queue.popleft()
-            total_length -= count_prompt_tokens(oldest_query["user_query_msg"] + oldest_query["reply"])
+            total_length -= count_prompt_tokens(oldest_query["user_query_msg"]) + count_prompt_tokens(oldest_query["reply"])
 
     # Convert the deque to a list before returning
     return list(summary_queue)
