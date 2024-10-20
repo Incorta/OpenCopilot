@@ -1,7 +1,7 @@
 import json
 import os
 from time import sleep
-
+from portkey_ai import createHeaders
 import langchain
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain.schema import (
@@ -150,5 +150,18 @@ def get_llm(model):
             temperature=get_model_temperature(model["ai_provider"]),
             max_tokens=4096
         ), model["aixplain_text_completion_model_id"]
+    elif model["ai_provider"] == SupportedAIProviders.ai_gateway.value["provider_name"]:
+        return ChatOpenAI(
+            base_url=model["ai_gateway_baseurl"],
+            api_key=model["ai_provider_text_completion_key"],
+            model=model["ai_provider_text_completion_model_name"],
+            temperature=get_model_temperature(model["ai_provider"]),
+            max_tokens=4096,
+            default_headers=createHeaders(
+                custom_host=model["ai_provider_text_completion_custom_host_url"],
+                provider=model["ai_provider_name"],
+                api_key=model["ai_gateway_api_key"]
+            )
+        ), f"{model['ai_provider_name']}-{model['ai_provider_text_completion_model_name']}"
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
