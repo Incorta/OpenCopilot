@@ -50,6 +50,7 @@ class SupportedAIProviders(Enum):
     }
     ai_gateway = { 
         "provider_name": "ai_gateway",
+        "temperature": 0.1,
         "prompts_paths": {
             "planner": {
                 "system": "resources/planner_level0_prompt_system.txt",

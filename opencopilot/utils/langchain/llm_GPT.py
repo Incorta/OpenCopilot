@@ -151,17 +151,17 @@ def get_llm(model):
             max_tokens=4096
         ), model["aixplain_text_completion_model_id"]
     elif model["ai_provider"] == SupportedAIProviders.ai_gateway.value["provider_name"]:
-         return ChatOpenAI(
+        return ChatOpenAI(
             base_url=model["ai_gateway_baseurl"],
             api_key=model["ai_provider_text_completion_key"],
             model=model["ai_provider_text_completion_model_name"],
+            temperature=get_model_temperature(model["ai_provider"]),
             max_tokens=4096,
             default_headers=createHeaders(
                 custom_host=model["ai_provider_text_completion_custom_host_url"],
-                provider = model["ai_provider_name"],
-                api_key= model["ai_gateway_api_key"]
+                provider=model["ai_provider_name"],
+                api_key=model["ai_gateway_api_key"]
             )
-        ), f"{model["provider"]}-{model['openai_api_text_completion_model_name']}"
-
+        ), f"{model['ai_provider_name']}-{model['ai_provider_text_completion_model_name']}"
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
