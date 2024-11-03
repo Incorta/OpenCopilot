@@ -1,10 +1,11 @@
 import importlib
+
+from opencopilot.handlers.planner import planner
 from opencopilot.utils import logger as logger
 from opencopilot.configs import env, constants
 from opencopilot.configs.env import operators_path
-from opencopilot.handlers.executor import gpt_task_processor
-from opencopilot.handlers.planner import gpt_planner
-from controller.predefined_query_handler import validate_predefined_query
+from opencopilot.handlers.executor import task_processor
+from service.controller.predefined_query_handler import validate_predefined_query
 from service.tests.E2E_tests.cached_sessions_store_handler import CachedSessionsStoreHandler
 from opencopilot.utils.exceptions import UnknownCommandError
 
@@ -15,7 +16,7 @@ def execute_sub_task(query_str, tasks, task_index, session_query, session_summar
     logger.system_message("Handling next task:")
     logger.operator_input(tasks[task_index])
 
-    command = gpt_task_processor.get_command_from_task(query_str, tasks, task_index, session_query, session_summary)
+    command = task_processor.get_command_from_task(query_str, tasks, task_index, session_query, session_summary)
 
     session_query.set_pending_agent_communications(component=task_index, sub_component=constants.Command, value=command)
 
@@ -86,12 +87,12 @@ def run_planning_loop(user_query_obj, session):
 
     session_query.set_pending_agent_communications(component=constants.session_query_user_query_msg, sub_component=None, value=user_query_msg)
 
-    tasks, session_summary = gpt_planner.plan_level_0(user_query_msg, session, session_query)
+    tasks, session_summary = planner.plan_level_0(user_query_msg, session, session_query)
     logger.print_tasks(tasks)
 
     while True:
         yield {constants.session_query_tasks: tasks, constants.session_query: session_query}
-        next_task_index = gpt_planner.get_next_todo_task_index(tasks)
+        next_task_index = planner.get_next_todo_task_index(tasks)
         if next_task_index < 0:
             break
 
