@@ -1,7 +1,6 @@
 import importlib
 from abc import ABC, abstractmethod
 from opencopilot.configs import constants
-from opencopilot.configs.env import operators_path
 
 
 class OperatorExecutor(ABC):
@@ -16,6 +15,5 @@ class OperatorExecutor(ABC):
 
     @staticmethod
     def prepare_history_object(operator, tasks):
-        operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
-        operator_file = importlib.import_module(operators_handler_module.op_functions[operator]["file_name"])
+        operator_file = importlib.import_module(operator["file_name"])
         return operator_file.process_result_for_summary(tasks)

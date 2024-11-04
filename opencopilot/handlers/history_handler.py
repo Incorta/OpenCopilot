@@ -1,13 +1,15 @@
 import copy
 import importlib
+import json
 from collections import deque
 
 from opencopilot.configs.constants import Operator
 from opencopilot.configs import constants
 from opencopilot.configs.env import operators_path
-from opencopilot.handlers.executor.operators_executor import OperatorExecutor
+from opencopilot.controller.operators_factory import OperatorsFactory
 from opencopilot.utils.tokens_counter import count_prompt_tokens
 from opencopilot.utils import logger
+
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 planner_llm_models_list = [constants.LLMModelPriority.primary_model.value, constants.LLMModelPriority.secondary_model.value]
 
@@ -44,13 +46,15 @@ def summarize_session_queries(user_session, max_history_size=1000):
     for query in user_session.queries_list[:-1]:
         query_msg = query.get_user_query_msg()
         tasks = query.get_tasks()
-
+        context = query.get_context()
         # Check if there are any tasks
         if tasks:
             last_task = tasks[-1]
-            operator = last_task.get(Operator, "")
+            operator_name = last_task.get(Operator, "")
+            operator = operators_handler_module.op_functions_resolver(context)[operator_name]
             try:
-                query_result = OperatorExecutor.prepare_history_object(operator, copy.deepcopy(tasks))
+                op_executor = OperatorsFactory().get_op_executor(operator)
+                query_result = op_executor.prepare_history_object(operator, copy.deepcopy(tasks))
 
                 # Add the new query and result to the queue
                 if query_result:
@@ -60,7 +64,7 @@ def summarize_session_queries(user_session, max_history_size=1000):
                     })
                     query_length = count_prompt_tokens(query_msg) + count_prompt_tokens(query_result)
                     total_length += query_length  # Update the total length counter
-
+                logger.info(f"summary_queue: {json.dumps(summary_queue)}")
             except Exception as e:
                 logger.error("Couldn't get history object for the previous task" + str(e))
 
