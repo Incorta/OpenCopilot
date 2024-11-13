@@ -156,6 +156,10 @@ def info(message):
     print_colored(message, COLOR_GREEN)
     get_logger().info(message)
 
+def warning(message):
+    print_colored(message, COLOR_YELLOW)
+    get_logger().warning(message)
+
 def trace(message):
     print_colored(message, COLOR_YELLOW)
     get_logger().debug(message)
