@@ -14,4 +14,4 @@ urllib3~=1.26.15
 pandas~=1.5.3
 psycopg2-binary~=2.9.6
 langchain~=0.0.253
-tiktoken~=0.4.0
+tiktoken~=0.8.0

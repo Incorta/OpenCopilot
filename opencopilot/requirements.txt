@@ -11,5 +11,5 @@ langchain-google-genai~=0.0.9
 langchain_community==0.0.32
 google-generativeai~=0.3.2
 aiXplain==0.2.14
-tiktoken~=0.5.0
+tiktoken~=0.8.0
 
