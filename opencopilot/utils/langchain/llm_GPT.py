@@ -125,7 +125,7 @@ def get_llm(model):
             base_url=model.get("openai_api_text_completion_baseurl"),
             model=model["openai_api_text_completion_model_name"],
             temperature=get_model_temperature(model["ai_provider"]),
-            max_tokens=6000,
+            max_tokens=4096,
         ), model["openai_api_text_completion_model_name"]
     elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(
@@ -148,7 +148,7 @@ def get_llm(model):
         return AixplainChatModel(
             model_id=model["aixplain_text_completion_model_id"],
             temperature=get_model_temperature(model["ai_provider"]),
-            max_tokens=6000
+            max_tokens=4096
         ), model["aixplain_text_completion_model_id"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
