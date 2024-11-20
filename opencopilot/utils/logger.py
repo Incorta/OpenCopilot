@@ -113,7 +113,7 @@ def setup_logger():
         return __internal_logger
     
     # Read the COPILOT_LOG_LEVEL environment variable
-    log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "ERROR")
+    log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "WARNING")
     log_level = getattr(logging, log_level_str.upper(), logging.ERROR)
 
     # Set up the logging configuration with a rotating file handler
