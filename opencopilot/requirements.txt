@@ -1,4 +1,4 @@
-openai~=1.17.0
+openai==1.55.3
 termcolor~=2.3.0
 jinja2~=3.1.2
 pydantic~=1.10.7
