@@ -5,12 +5,13 @@ from collections import deque
 
 from opencopilot.configs.constants import Operator
 from opencopilot.configs import constants
-from opencopilot.configs.env import operators_path
+from opencopilot.configs.env import operators_path,service_utils_path
 from opencopilot.controller.operators_factory import OperatorsFactory
 from opencopilot.utils.tokens_counter import count_prompt_tokens
 from opencopilot.utils import logger
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
+service_utils_constant_module = importlib.import_module(service_utils_path + ".constants")
 planner_llm_models_list = [constants.LLMModelPriority.primary_model.value, constants.LLMModelPriority.secondary_model.value]
 
 
@@ -25,7 +26,7 @@ def construct_summary_object(user_session):
     return session_summary
 
 
-def summarize_session_queries(user_session, max_history_size=1000):
+def summarize_session_queries(user_session, max_history_size=service_utils_constant_module.HISTORY_LIMIT):
     """
     This function generates a summary of a user's session queries using a queue-based approach.
 
