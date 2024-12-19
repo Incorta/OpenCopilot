@@ -41,14 +41,13 @@ def extract_json_block(text):
     if start_index != -1 and end_index != -1:
         # Extract the JSON block from the text
         json_block_text = text[start_index:end_index + 1]
-
         # Parse the JSON block into a Python dictionary
         try:
             json_block_dict = json.loads(json_block_text)
         except json.JSONDecodeError as e:
-            print("Error parsing JSON:")
-            print(json_block_text)
-            print("Exception:", str(e))
+            logger.error("Error parsing JSON:")
+            logger.error(json_block_text)
+            logger.error("Exception:", str(e))
             raise APIFailureException("Error parsing JSON.")
 
         # Print the extracted JSON block
