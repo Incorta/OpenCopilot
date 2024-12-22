@@ -1,4 +1,5 @@
 import json
+import re
 import os
 from time import sleep
 
@@ -34,27 +35,60 @@ def update_configurations(key1, value1, key2=None, value2=None):
 
 
 def extract_json_block(text):
-    # Find the first and last curly brace
-    start_index = text.find("{")
-    end_index = text.rfind("}")
+    """
+    Extracts the last JSON block from the input string.
 
-    if start_index != -1 and end_index != -1:
-        # Extract the JSON block from the text
-        json_block_text = text[start_index:end_index + 1]
-        # Parse the JSON block into a Python dictionary
-        try:
-            json_block_dict = json.loads(json_block_text)
-        except json.JSONDecodeError as e:
-            logger.error("Error parsing JSON:")
-            logger.error(json_block_text)
-            logger.error("Exception:", str(e))
-            raise APIFailureException("Error parsing JSON.")
+    Raises:
+        APIFailureException: If no valid JSON block is found or parsing fails.
+    """
+    # Pattern to match string literals in JSON
+    string_pattern = r'(".*?")'
 
-        # Print the extracted JSON block
-        return json.dumps(json_block_dict, indent=4)
+    # Function to replace unescaped newline and carriage return characters within strings
+    def escape_unescaped_newlines(match):
+        string = match.group(0)
+        # Escape unescaped newlines and carriage returns
+        string = string.replace('\n', '\\n').replace('\r', '\\r')
+        return string
+
+    # Apply the function to all string literals in the text
+    text = re.sub(string_pattern, escape_unescaped_newlines, text, flags=re.DOTALL)
+
+    # Find the last closing curly brace `}`
+    last_brace_index = text.rfind('}')
+
+    if last_brace_index == -1:
+        raise APIFailureException("No closing curly brace found in the text.")
+
+    # Now find the corresponding opening brace `{` for this closing brace `}`
+    opening_brace_count = 0
+    for i in range(last_brace_index, -1, -1):
+        if text[i] == '}':
+            opening_brace_count += 1
+        elif text[i] == '{':
+            opening_brace_count -= 1
+
+            # When we've found the corresponding `{` to the last `}`, we extract the block
+        if opening_brace_count == 0:
+            start_index = i
+            break
     else:
-        raise APIFailureException("No JSON block found in the text.")
+        raise APIFailureException("No matching opening brace found for the last closing brace.")
 
+    # Extract the potential JSON block from the start to the last closing brace
+    json_block = text[start_index:last_brace_index + 1]
+
+    # Try to parse the extracted JSON block
+    try:
+        json_block_dict = json.loads(json_block)
+    except json.JSONDecodeError as e:
+        logger.error("Error parsing JSON:")
+        logger.error(json_block)
+        logger.error("Exception: %s", str(e))
+        raise APIFailureException("Error parsing JSON.")
+
+    # Return the extracted JSON block as a pretty-printed string
+    return json.dumps(json_block_dict, indent=4)
 
 def resolve_llm_model(llm_names, priority_list_mode=True):
     model = None
