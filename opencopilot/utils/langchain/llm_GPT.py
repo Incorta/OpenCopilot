@@ -80,8 +80,12 @@ def extract_json_block(text):
                     pass  # Skip invalid JSON blocks
 
     if len(json_blocks) == 0:
+        logger.error("Error Extracting JSON:")
+        logger.error(text)
         raise APIFailureException("No valid JSON blocks found.")
     elif len(json_blocks) > 1:
+        logger.error("Error Extracting JSON:")
+        logger.error(text)
         raise APIFailureException("More than one valid JSON block returned.")
 
     # Only one valid JSON block is expected at this point
