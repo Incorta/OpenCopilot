@@ -75,8 +75,8 @@ def extract_json_block(text):
                     if 'type' not in parsed_block or 'property' not in parsed_block:
                         json_blocks.append(json_block)  # If valid and no unwanted keys, add to the list
                 except json.JSONDecodeError as e:
-                    logger.error("Error parsing JSON block: %s", json_block)
-                    logger.error("Exception: %s", str(e))
+                    logger.error("Error parsing JSON block:" + json_block)
+                    logger.error("Exception:"+ str(e))
                     pass  # Skip invalid JSON blocks
 
     if len(json_blocks) == 0:
@@ -97,7 +97,7 @@ def extract_json_block(text):
     except json.JSONDecodeError as e:
         logger.error("Error parsing JSON:")
         logger.error(json_block)
-        logger.error("Exception: %s", str(e))
+        logger.error("Exception:" + str(e))
         raise APIFailureException("Error parsing JSON.")
 
     # Return the extracted JSON block as a pretty-printed string
