@@ -4,8 +4,6 @@ Use one or more of the following tasks in the plan. A task can be repeated if re
 If you need some input or feedback from the user, create a smaller plan that would ask the user for the input.
 I will send you the user reply in a separate request so that you continue by creating another plan.
 
-**Please ensure that the plan results in exactly one final answer**
-
 {% if session_summary != "" %}
 Previous Interaction:
 
@@ -28,3 +26,4 @@ Constraints:
 ```json
 {{ plan_schema }}
 ```
+ - NEVER suggest more than one PLAN
