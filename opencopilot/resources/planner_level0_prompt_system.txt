@@ -23,9 +23,7 @@ Constraints:
 
 
 **Output Format SCHEMA**
-
-Use the following SCHEMA just to design the response format, but NEVER return it in the response.
-
 ```json
 {{ plan_schema }}
 ```
+ - NEVER suggest more than one json object
