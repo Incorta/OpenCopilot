@@ -22,10 +22,16 @@ Constraints:
 {% endif %}
 
 
+**Important Instructions:**
+
+- Ensure that all control characters (e.g., newlines, tabs) in string values are properly escaped in the JSON output.
+- The JSON output must be valid and parseable.
+- Do not include unescaped control characters in any string values.
+- Wrap the JSON output in code blocks using triple backticks for clarity.
+- Provide EXACTLY One answer
+
 **Output Format SCHEMA**
-
-Use the following SCHEMA just to design the response format, but NEVER return it in the response.
-
 ```json
 {{ plan_schema }}
 ```
+- Never include Output Format SCHEMA in the response

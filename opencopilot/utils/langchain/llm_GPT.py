@@ -1,5 +1,7 @@
 import json
 import os
+import re
+
 from time import sleep
 
 import langchain
@@ -34,27 +36,76 @@ def update_configurations(key1, value1, key2=None, value2=None):
 
 
 def extract_json_block(text):
-    # Find the first and last curly brace
-    start_index = text.find("{")
-    end_index = text.rfind("}")
+    string_pattern = r'(".*?")'
 
-    if start_index != -1 and end_index != -1:
-        # Extract the JSON block from the text
-        json_block_text = text[start_index:end_index + 1]
+    # Function to replace unescaped newline and carriage return characters within strings
+    def escape_unescaped_newlines(match):
+        string = match.group(0)
+        # Escape unescaped newlines and carriage returns
+        string = string.replace('\n', '\\n').replace('\r', '\\r')
+        return string
 
-        # Parse the JSON block into a Python dictionary
-        try:
-            json_block_dict = json.loads(json_block_text)
-        except json.JSONDecodeError as e:
-            print("Error parsing JSON:")
-            print(json_block_text)
-            print("Exception:", str(e))
-            raise APIFailureException("Error parsing JSON.")
+    def is_schema(parsed_block):
+        return 'type' in parsed_block and 'property' in parsed_block
 
-        # Print the extracted JSON block
-        return json.dumps(json_block_dict, indent=4)
-    else:
-        raise APIFailureException("No JSON block found in the text.")
+    # Apply the function to all string literals in the text
+    text = re.sub(string_pattern, escape_unescaped_newlines, text, flags=re.DOTALL)
+    # Find the last closing curly brace `}`
+    last_brace_index = text.rfind('}')
+    if last_brace_index == -1:
+        raise APIFailureException("No closing curly brace found in the text.")
+
+    # Escape unescaped newlines and carriage returns in the entire text first (before extracting JSON blocks)
+    text = re.sub(r'(".*?")', escape_unescaped_newlines, text)
+
+    json_blocks = []
+    opening_brace_count = 0
+    start_index = None
+
+    for i in range(len(text)):
+        if text[i] == '{':
+            if opening_brace_count == 0:
+                start_index = i  # mark the start of the JSON block
+            opening_brace_count += 1
+        elif text[i] == '}':
+            opening_brace_count -= 1
+            if opening_brace_count == 0:
+                json_block = text[start_index:i+1]
+                try:
+                    # Try to parse the JSON block to ensure it's valid JSON
+                    parsed_block = json.loads(json_block)
+                    # ignore schema jsons
+                    if not is_schema(parsed_block):
+                        json_blocks.append(json_block)
+                        
+                except json.JSONDecodeError as e:
+                    logger.error("Error parsing JSON block:" + json_block)
+                    logger.error("Exception:"+ str(e))
+                    pass  # Skip invalid JSON blocks
+
+    if len(json_blocks) == 0:
+        logger.error("Error Extracting JSON:")
+        logger.error(text)
+        raise APIFailureException("No valid JSON blocks found.")
+    elif len(json_blocks) > 1:
+        logger.error("Error Extracting JSON:")
+        logger.error(text)
+        raise APIFailureException("More than one valid JSON block returned.")
+
+    # Only one valid JSON block is expected at this point
+    json_block = json_blocks[0]
+
+    # Try to parse the extracted JSON block
+    try:
+        json_block_dict = json.loads(json_block)
+    except json.JSONDecodeError as e:
+        logger.error("Error parsing JSON:")
+        logger.error(json_block)
+        logger.error("Exception:" + str(e))
+        raise APIFailureException("Error parsing JSON.")
+
+    # Return the extracted JSON block as a pretty-printed string
+    return json.dumps(json_block_dict, indent=4)
 
 
 def resolve_llm_model(llm_names, priority_list_mode=True):
