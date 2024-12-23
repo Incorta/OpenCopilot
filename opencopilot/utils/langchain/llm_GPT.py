@@ -45,6 +45,9 @@ def extract_json_block(text):
         string = string.replace('\n', '\\n').replace('\r', '\\r')
         return string
 
+    def is_schema(parsed_block):
+        return 'type' in parsed_block and 'property' in parsed_block
+
     # Apply the function to all string literals in the text
     text = re.sub(string_pattern, escape_unescaped_newlines, text, flags=re.DOTALL)
     # Find the last closing curly brace `}`
@@ -71,9 +74,10 @@ def extract_json_block(text):
                 try:
                     # Try to parse the JSON block to ensure it's valid JSON
                     parsed_block = json.loads(json_block)
-                    # Check if the block contains 'type' or 'property' keys
-                    if 'type' not in parsed_block or 'property' not in parsed_block:
-                        json_blocks.append(json_block)  # If valid and no unwanted keys, add to the list
+                    # ignore schema jsons
+                    if not is_schema(parsed_block):
+                        json_blocks.append(json_block)
+                        
                 except json.JSONDecodeError as e:
                     logger.error("Error parsing JSON block:" + json_block)
                     logger.error("Exception:"+ str(e))
