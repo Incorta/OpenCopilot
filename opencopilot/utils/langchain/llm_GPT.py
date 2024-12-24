@@ -1,6 +1,4 @@
-import json
 import os
-import re
 
 from time import sleep
 
@@ -20,6 +18,8 @@ from opencopilot.configs.constants import LLMModelPriority
 from langchain_community.callbacks import get_openai_callback
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+from opencopilot.utils.utilities import extract_json_block
+
 llm_configs = None
 LLM_RETRY_COUNT = 3
 
@@ -33,79 +33,6 @@ def update_configurations(key1, value1, key2=None, value2=None):
     llm_configs[LLMModelPriority.primary_model.value][key1] = value1
     if key2 is not None:
         llm_configs[LLMModelPriority.secondary_model.value][key2] = value2
-
-
-def extract_json_block(text):
-    string_pattern = r'(".*?")'
-
-    # Function to replace unescaped newline and carriage return characters within strings
-    def escape_unescaped_newlines(match):
-        string = match.group(0)
-        # Escape unescaped newlines and carriage returns
-        string = string.replace('\n', '\\n').replace('\r', '\\r')
-        return string
-
-    def is_schema(parsed_block):
-        return 'type' in parsed_block and 'property' in parsed_block
-
-    # Apply the function to all string literals in the text
-    text = re.sub(string_pattern, escape_unescaped_newlines, text, flags=re.DOTALL)
-    # Find the last closing curly brace `}`
-    last_brace_index = text.rfind('}')
-    if last_brace_index == -1:
-        raise APIFailureException("No closing curly brace found in the text.")
-
-    # Escape unescaped newlines and carriage returns in the entire text first (before extracting JSON blocks)
-    text = re.sub(r'(".*?")', escape_unescaped_newlines, text)
-
-    json_blocks = []
-    opening_brace_count = 0
-    start_index = None
-
-    for i in range(len(text)):
-        if text[i] == '{':
-            if opening_brace_count == 0:
-                start_index = i  # mark the start of the JSON block
-            opening_brace_count += 1
-        elif text[i] == '}':
-            opening_brace_count -= 1
-            if opening_brace_count == 0:
-                json_block = text[start_index:i+1]
-                try:
-                    # Try to parse the JSON block to ensure it's valid JSON
-                    parsed_block = json.loads(json_block)
-                    # ignore schema jsons
-                    if not is_schema(parsed_block):
-                        json_blocks.append(json_block)
-                        
-                except json.JSONDecodeError as e:
-                    logger.error("Error parsing JSON block:" + json_block)
-                    logger.error("Exception:"+ str(e))
-                    pass  # Skip invalid JSON blocks
-
-    if len(json_blocks) == 0:
-        logger.error("Error Extracting JSON:")
-        logger.error(text)
-        raise APIFailureException("No valid JSON blocks found.")
-    elif len(json_blocks) > 1:
-        logger.error("Error Extracting JSON:")
-        logger.error(text)
-        raise APIFailureException("More than one valid JSON block returned.")
-
-    # Only one valid JSON block is expected at this point
-    json_block = json_blocks[0]
-
-    # Try to parse the extracted JSON block
-    try:
-        json_block_dict = json.loads(json_block)
-    except json.JSONDecodeError as e:
-        logger.error("Error parsing JSON:")
-        logger.error(json_block)
-        logger.error("Exception:" + str(e))
-        raise APIFailureException("Error parsing JSON.")
-
-    # Return the extracted JSON block as a pretty-printed string
-    return json.dumps(json_block_dict, indent=4)
 
 
 def resolve_llm_model(llm_names, priority_list_mode=True):
@@ -152,7 +79,10 @@ def run(messages, model):
                 consumption_tracking = ConsumptionTracker.create_consumption_unit(model_name, cb.total_tokens, cb.prompt_tokens, cb.completion_tokens, cb.successful_requests, cb.total_cost)
 
             llm_reply_text = llm_reply.content.replace("\\_", "_")  # to handle Mixtral tendency to escape underscores
-            response = extract_json_block(llm_reply_text)
+            try:
+                response = extract_json_block(llm_reply_text)
+            except Exception as e:
+                raise APIFailureException(str(e))
             return response, consumption_tracking, model_name
         except APIFailureException as e:
             retry_count += 1

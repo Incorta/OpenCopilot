@@ -1,5 +1,5 @@
 import importlib
-from opencopilot.configs.env import operators_path,service_utils_path
+from opencopilot.configs.env import service_utils_path
 
 service_utils_exceptions_module = importlib.import_module(service_utils_path + ".exceptions")
 class UnknownCommandError(Exception):
