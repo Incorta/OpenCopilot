@@ -16,6 +16,11 @@ class TestJsonBlockExtractor(unittest.TestCase):
         expected_output = '{"key": "value\\nanother value\\r"}'
         self.assertEqual(escape_unescaped_newlines_in_text(input_text), expected_output)
 
+    def test_escape_escaped_newlines_in_text(self):
+        input_text = '{"key": "value\\nanother value\\r"}'
+        expected_output = '{"key": "value\\nanother value\\r"}'
+        self.assertEqual(escape_unescaped_newlines_in_text(input_text), expected_output)
+
     def test_extract_json_blocks(self):
         input_text = '{"key1": "value1"} some text {"key2": "value2"}'
         expected_blocks = ['{"key1": "value1"}', '{"key2": "value2"}']
@@ -67,5 +72,3 @@ class TestJsonBlockExtractor(unittest.TestCase):
             extract_json_block(multiple_json_text)
         self.assertEqual(str(context.exception), "More than one valid JSON block found.")
 
-if __name__ == "__main__":
-    unittest.main()
