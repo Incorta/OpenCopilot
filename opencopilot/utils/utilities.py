@@ -2,74 +2,77 @@ import re
 import json
 import opencopilot.utils.logger as logger
 
-def extract_json_block(text):
+def escape_unescaped_newlines_in_text(text):
+    """Escape unescaped newline and carriage return characters in string literals within the text."""
     string_pattern = r'(".*?")'
 
-    # Function to replace unescaped newline and carriage return characters within strings
     def escape_unescaped_newlines(match):
         string = match.group(0)
-        # Escape unescaped newlines and carriage returns
-        string = string.replace('\n', '\\n').replace('\r', '\\r')
-        return string
+        return string.replace('\n', '\\n').replace('\r', '\\r')
 
-    def is_schema(parsed_block):
-        return 'type' in parsed_block and 'property' in parsed_block
+    return re.sub(string_pattern, escape_unescaped_newlines, text, flags=re.DOTALL)
 
-    # Apply the function to all string literals in the text
-    text = re.sub(string_pattern, escape_unescaped_newlines, text, flags=re.DOTALL)
-    # Find the last closing curly brace `}`
-    last_brace_index = text.rfind('}')
-    if last_brace_index == -1:
-        raise Exception("No closing curly brace found in the text.")
-
-    # Escape unescaped newlines and carriage returns in the entire text first (before extracting JSON blocks)
-    text = re.sub(r'(".*?")', escape_unescaped_newlines, text)
-
-    json_blocks = []
+def extract_json_blocks(text):
+    """Extract all JSON blocks from the given text."""
     opening_brace_count = 0
     start_index = None
+    json_blocks = []
 
-    for i in range(len(text)):
-        if text[i] == '{':
+    for i, char in enumerate(text):
+        if char == '{':
             if opening_brace_count == 0:
-                start_index = i  # mark the start of the JSON block
+                start_index = i
             opening_brace_count += 1
-        elif text[i] == '}':
+        elif char == '}':
             opening_brace_count -= 1
-            if opening_brace_count == 0:
-                json_block = text[start_index:i+1]
-                try:
-                    # Try to parse the JSON block to ensure it's valid JSON
-                    parsed_block = json.loads(json_block)
-                    # ignore schema jsons
-                    if not is_schema(parsed_block):
-                        json_blocks.append(json_block)
+            if opening_brace_count == 0 and start_index is not None:
+                json_blocks.append(text[start_index:i + 1])
+                start_index = None
 
-                except json.JSONDecodeError as e:
-                    logger.error("Error parsing JSON block:" + json_block)
-                    logger.error("Exception:"+ str(e))
-                    pass  # Skip invalid JSON blocks
+    return json_blocks
 
-    if len(json_blocks) == 0:
-        logger.error("Error Extracting JSON:")
-        logger.error(text)
+def validate_and_filter_json_blocks(json_blocks):
+    """Validate JSON blocks and filter out schemas."""
+    valid_json_blocks = []
+
+    for block in json_blocks:
+        try:
+            parsed_block = json.loads(block)
+            if not is_schema(parsed_block):  # Ignore schema JSONs
+                valid_json_blocks.append(parsed_block)
+        except json.JSONDecodeError:
+            logger.error(f"Invalid JSON block: {block}")
+
+    return valid_json_blocks
+
+def is_schema(parsed_block):
+    """Determine whether a JSON block is a schema."""
+    return 'type' in parsed_block and 'property' in parsed_block
+
+def handle_extracted_blocks(valid_json_blocks):
+    """Handle the extracted valid JSON blocks and raise errors for invalid cases."""
+    if len(valid_json_blocks) == 0:
+        logger.error("No valid JSON blocks found.")
         raise Exception("No valid JSON blocks found.")
-    elif len(json_blocks) > 1:
-        logger.error("Error Extracting JSON:")
-        logger.error(text)
-        raise Exception("More than one valid JSON block returned.")
+    elif len(valid_json_blocks) > 1:
+        logger.error("More than one valid JSON block found.")
+        raise Exception("More than one valid JSON block found.")
 
-    # Only one valid JSON block is expected at this point
-    json_block = json_blocks[0]
+    return valid_json_blocks[0]
 
-    # Try to parse the extracted JSON block
-    try:
-        json_block_dict = json.loads(json_block)
-    except json.JSONDecodeError as e:
-        logger.error("Error parsing JSON:")
-        logger.error(json_block)
-        logger.error("Exception:" + str(e))
-        raise Exception("Error parsing JSON.")
+def extract_json_block(text):
+    """Main function to extract a valid JSON block from text."""
+    # Step 1: Escape unescaped newlines and carriage returns
+    cleaned_text = escape_unescaped_newlines_in_text(text)
 
-    # Return the extracted JSON block as a pretty-printed string
-    return json.dumps(json_block_dict, indent=4)
+    # Step 2: Extract JSON blocks
+    json_blocks = extract_json_blocks(cleaned_text)
+
+    # Step 3: Validate and filter JSON blocks
+    valid_json_blocks = validate_and_filter_json_blocks(json_blocks)
+
+    # Step 4: Handle the extracted blocks and return the result
+    final_json_block = handle_extracted_blocks(valid_json_blocks)
+
+    # Step 5: Return the pretty-printed JSON block
+    return json.dumps(final_json_block, indent=4)
