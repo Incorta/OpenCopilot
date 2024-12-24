@@ -1,6 +1,7 @@
 import copy
 import json
 import importlib
+import opencopilot.utils.logger as logger
 
 from opencopilot.configs import constants
 from opencopilot.configs.ai_providers import get_planner_prompt_file_path
@@ -83,21 +84,34 @@ def construct_level_0_prompt(user_objective, context, session_summary_str, model
 
 
 def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response):
+    logger.info("resolving_llm_model")
     model = resolve_llm_model(planner_llm_models_list)
+    logger.info("resolved_llm_model")
 
+    logger.info("constructing summary")
     session_summary = construct_summary_object(user_session)
+    logger.info("constructed summary")
+
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
 
+    logger.info("construct_level_0_prompt")
     # Construct planner request
     planner_messages, _, supported_operators = construct_level_0_prompt(user_objective, session_query.get_context(), session_summary_str, model)
+    logger.info("constructed_level_0_prompt")
+    logger.info("set_pending_agent_communications")
     session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
+    logger.info("setted_pending_agent_communications")
 
     # Construct planner response
+    logger.info("get_cached_agent_communications_planner_response")
     cached_level0_plan_response = session_query.get_cached_agent_communications_planner_response(planner_messages)
+    logger.info("got_cached_agent_communications_planner_response")
     if cached_level0_plan_response is not None:
         planned_tasks = cached_level0_plan_response
     else:
+        logger.info("run planner message")
         planned_tasks, consumption_tracking, _ = llm_GPT.run(planner_messages, model)
+        logger.info("ran planner message")
         consumption_tracker.add_consumption(consumption_tracking, constants.planner, "level 0")
         if evaluate_response:
             evaluation, evaluation_consumption_tracking = evaluate_llm_reply(planner_messages, planned_tasks)
