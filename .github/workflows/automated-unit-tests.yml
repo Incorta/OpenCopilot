@@ -1,0 +1,33 @@
+# .github/workflows/run-unit-tests.yml
+name: Run Unit Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref || github.ref }} # Use the branch that triggered the workflow
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install dependencies
+        run: |
+          if [ -f ./opencopilot/requirements.txt ]; then
+            pip install -r ./opencopilot/requirements.txt
+          fi
+
+      - name: Run test script
+        run: |
+          chmod +x run-unit-tests.sh  
+          ./run-unit-tests.sh
