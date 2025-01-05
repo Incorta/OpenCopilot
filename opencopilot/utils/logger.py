@@ -20,12 +20,38 @@ COLOR_GREY = "grey"
 
 all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_GREY]
 
+class LogFileFullException(Exception):
+    pass
+
+# Decorator to handle exceptions in logging methods
+def handle_logging_exceptions(func):
+    """
+    Decorator to handle exceptions in logging methods.
+    Detects if the log file is full and raises a custom exception.
+    """
+    def wrapper(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except OSError as e:
+            # Detect if the error is related to disk or file being full
+            if e.errno == 28:  # Error code 28: No space left on device
+                raise LogFileFullException("Log file is full or disk space is exhausted.")
+            else:
+                raise  # Re-raise other exceptions
+        except Exception as e:
+            # Handle other generic exceptions if necessary
+            print(f"Unexpected logging error: {e}")
+            return None  # Prevent further propagation of the exception
+    return wrapper
+
+
 class ZipRotatingFileHandler(RotatingFileHandler):
     def __init__(self, filename, mode='a', maxBytes=0, backupCount=0, encoding=None, delay=False):
         super().__init__(filename, mode, maxBytes, backupCount, encoding, delay)
         self.rotator = self.rotate_file
         self.max_zips = backupCount
 
+    @handle_logging_exceptions
     def rotate_file(self, source, dest):
         if os.path.exists(source):
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -44,7 +70,7 @@ class ZipRotatingFileHandler(RotatingFileHandler):
                 
             except Exception as e:
                 print(f"Error zipping log file: {e}")
-
+    @handle_logging_exceptions
     def maintain_zip_limit(self, base_path):
         # Get all zip files with the base path
         zip_pattern = f"{base_path}_*.zip"
@@ -88,12 +114,13 @@ class StreamToLogger(object):
         self.log_level = log_level
         self.linebuf = ''
         self.original_stream = original_stream
-
+    @handle_logging_exceptions
     def write(self, buf):
         for line in buf.rstrip().splitlines():
             self.logger.log(self.log_level, line.rstrip())
         self.original_stream.write(buf)  # Write to the original stream as well
 
+    @handle_logging_exceptions
     def flush(self):
         for handler in self.logger.handlers:
             handler.flush()
@@ -152,37 +179,46 @@ def print_all_colors():
     for color in all_colors:
         print_colored(f"Hello world!: {color}", color)
 
+@handle_logging_exceptions
 def info(message):
     print_colored(message, COLOR_GREEN)
     get_logger().info(message)
 
+@handle_logging_exceptions
 def warning(message):
     print_colored(message, COLOR_YELLOW)
     get_logger().warning(message)
 
+@handle_logging_exceptions
 def trace(message):
     print_colored(message, COLOR_YELLOW)
     get_logger().debug(message)
 
+@handle_logging_exceptions
 def error(message):
     print_colored(message, COLOR_RED)
     get_logger().error(message)
 
+@handle_logging_exceptions
 def operator_response(message):
     print_colored(message, COLOR_CYAN)
     get_logger().debug(message)
 
+@handle_logging_exceptions
 def operator_input(message):
     operator_response(message)
 
+@handle_logging_exceptions
 def system_message(message):
     print_colored(message, COLOR_BLUE)
     get_logger().debug(message)
 
+@handle_logging_exceptions
 def predefined_message(message):
     print_colored(message, COLOR_MAGENTA)
     get_logger().debug(message)
 
+@handle_logging_exceptions
 def print_tasks(tasks_json_array):
     for task in tasks_json_array:
         color = COLOR_YELLOW if task.get("status") == "TODO" else COLOR_GREEN
