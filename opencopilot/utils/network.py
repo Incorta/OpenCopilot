@@ -1,4 +1,6 @@
 import time
+import traceback
+
 from opencopilot.utils import logger
 
 
@@ -15,4 +17,4 @@ def retry(action, retries=3, delay=2):
             if i < retries - 1:
                 time.sleep(delay)
 
-    raise Exception(f"Action failed after {retries} attempts, with error: {last_e}")
+    raise Exception(f"Action failed after {retries} attempts, with error: {last_e}\n {traceback.format_exc()}")
