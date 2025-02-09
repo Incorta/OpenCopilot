@@ -65,7 +65,7 @@ def summarize_session_queries(user_session, max_history_size=service_utils_const
                     })
                     query_length = count_prompt_tokens(query_msg) + count_prompt_tokens(query_result)
                     total_length += query_length  # Update the total length counter
-                logger.info(f"summary_queue: {json.dumps(summary_queue)}")
+                logger.info(f"summary_queue: {json.dumps(list(summary_queue))}")
             except Exception as e:
                 logger.error("Couldn't get history object for the previous task" + str(e))
 
