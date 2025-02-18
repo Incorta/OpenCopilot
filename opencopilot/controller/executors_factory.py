@@ -3,6 +3,8 @@ import json
 import os
 import sys
 
+from opencopilot.configs.env import user_operators_path
+
 
 class ExecutorsFactory:
     @staticmethod
@@ -38,11 +40,6 @@ class ExecutorsFactory:
         # Case 2: Plugin-based executor
         elif "plugin_name" in operator:
             plugin_name = operator["plugin_name"]
-            base_path = os.getenv("SERVICE_DATA_PATH")
-            if not base_path:
-                raise EnvironmentError("SERVICE_DATA_PATH environment variable is not set")
-
-            user_operators_path = os.path.join(base_path, "user_operators")
             manifest_path = os.path.join(user_operators_path, plugin_name, "manifest.json")
             if os.path.exists(manifest_path):
                 with open(manifest_path, "r") as manifest_file:
