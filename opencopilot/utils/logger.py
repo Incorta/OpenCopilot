@@ -20,6 +20,7 @@ COLOR_GREY = "grey"
 
 all_colors = [COLOR_BLACK, COLOR_RED, COLOR_GREEN, COLOR_YELLOW, COLOR_BLUE, COLOR_MAGENTA, COLOR_CYAN, COLOR_WHITE, COLOR_GREY]
 
+
 class ZipRotatingFileHandler(RotatingFileHandler):
     def __init__(self, filename, mode='a', maxBytes=0, backupCount=0, encoding=None, delay=False):
         super().__init__(filename, mode, maxBytes, backupCount, encoding, delay)
@@ -31,17 +32,17 @@ class ZipRotatingFileHandler(RotatingFileHandler):
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             base_path = os.path.splitext(dest)[0]
             zip_filename = f"{base_path}_{timestamp}.zip"
-            
+
             try:
                 with zipfile.ZipFile(zip_filename, 'w', zipfile.ZIP_DEFLATED) as zipf:
                     zipf.write(source, os.path.basename(source))
-                
+
                 # After successful compression, delete the original log file
                 os.remove(source)
-                
+
                 # Check and maintain the zip file limit
                 self.maintain_zip_limit(base_path)
-                
+
             except Exception as e:
                 print(f"Error zipping log file: {e}")
 
@@ -49,10 +50,10 @@ class ZipRotatingFileHandler(RotatingFileHandler):
         # Get all zip files with the base path
         zip_pattern = f"{base_path}_*.zip"
         zip_files = glob.glob(zip_pattern)
-        
+
         # Sort zip files by modification time (oldest first)
         zip_files.sort(key=os.path.getmtime)
-        
+
         # Remove oldest files if we exceed the limit
         while len(zip_files) > self.max_zips:
             oldest_file = zip_files.pop(0)
@@ -99,7 +100,9 @@ class StreamToLogger(object):
             handler.flush()
         self.original_stream.flush()  # Flush the original stream as well
 
+
 __internal_logger = None  # Ensure global declaration here
+
 
 def get_logger():
     global __internal_logger
@@ -107,11 +110,12 @@ def get_logger():
         __internal_logger = setup_logger()  # Ensure logger is set up
     return __internal_logger
 
+
 def setup_logger():
     global __internal_logger
     if __internal_logger is not None:
         return __internal_logger
-    
+
     # Read the COPILOT_LOG_LEVEL environment variable
     log_level_str = os.environ.get("COPILOT_LOG_LEVEL", "ERROR")
     log_level = getattr(logging, log_level_str.upper(), logging.ERROR)
@@ -144,44 +148,55 @@ def setup_logger():
 
     return __internal_logger
 
+
 def print_colored(message, color):
     if get_logger().isEnabledFor(logging.INFO):  # Always use get_logger() to ensure it's initialized
         print(colored(message, color))
+
 
 def print_all_colors():
     for color in all_colors:
         print_colored(f"Hello world!: {color}", color)
 
+
 def info(message):
     print_colored(message, COLOR_GREEN)
     get_logger().info(message)
+
 
 def warning(message):
     print_colored(message, COLOR_YELLOW)
     get_logger().warning(message)
 
+
 def trace(message):
     print_colored(message, COLOR_YELLOW)
     get_logger().debug(message)
+
 
 def error(message):
     print_colored(message, COLOR_RED)
     get_logger().error(message)
 
+
 def operator_response(message):
     print_colored(message, COLOR_CYAN)
     get_logger().debug(message)
 
+
 def operator_input(message):
     operator_response(message)
+
 
 def system_message(message):
     print_colored(message, COLOR_BLUE)
     get_logger().debug(message)
 
+
 def predefined_message(message):
     print_colored(message, COLOR_MAGENTA)
     get_logger().debug(message)
+
 
 def print_tasks(tasks_json_array):
     for task in tasks_json_array:
@@ -189,6 +204,7 @@ def print_tasks(tasks_json_array):
         task_json = json.dumps(task, indent=2)
         print_colored(task_json, color)
         get_logger().debug(task_json)
+
 
 def print_gpt_messages(messages):
     for message in messages:
