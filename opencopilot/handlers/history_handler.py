@@ -5,8 +5,8 @@ from collections import deque
 
 from opencopilot.configs.constants import Operator
 from opencopilot.configs import constants
-from opencopilot.configs.env import operators_path,service_utils_path
-from opencopilot.controller.operators_factory import OperatorsFactory
+from opencopilot.configs.env import operators_path, service_utils_path
+from opencopilot.controller.executors_factory import ExecutorsFactory
 from opencopilot.utils.tokens_counter import count_prompt_tokens
 from opencopilot.utils import logger
 
@@ -54,7 +54,7 @@ def summarize_session_queries(user_session, max_history_size=service_utils_const
             operator_name = last_task.get(Operator, "")
             operator = operators_handler_module.op_functions_resolver(context)[operator_name]
             try:
-                op_executor = OperatorsFactory().get_op_executor(operator)
+                op_executor = ExecutorsFactory().get_op_executor(operator)
                 query_result = op_executor.prepare_history_object(operator, copy.deepcopy(tasks))
 
                 # Add the new query and result to the queue
