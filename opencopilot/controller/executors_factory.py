@@ -4,6 +4,7 @@ import os
 import sys
 
 from opencopilot.configs.env import user_operators_path
+from opencopilot.utils import logger
 
 
 class ExecutorsFactory:
@@ -78,3 +79,35 @@ class ExecutorsFactory:
 
         # Return an instance of the executor class
         return op_executor()
+
+
+def list_available_plugins():
+    """
+    Lists all plugin-based available plugins with their versions from manifest.json.
+
+    Returns:
+        list: A list of dictionaries containing plugin names and their versions.
+    """
+    plugins = []
+
+    if not os.path.exists(user_operators_path):
+        logger.warning(f"The user operators path '{user_operators_path}' does not exist.")
+
+    for plugin_name in os.listdir(user_operators_path):
+        plugin_path = os.path.join(user_operators_path, plugin_name)
+        manifest_path = os.path.join(plugin_path, "manifest.json")
+
+        if os.path.isdir(plugin_path) and os.path.exists(manifest_path):
+            try:
+                with open(manifest_path, "r") as manifest_file:
+                    manifest_data = json.load(manifest_file)
+
+                plugin_info = {
+                    "plugin_name": plugin_name,
+                    "version": manifest_data.get("version", "unknown")
+                }
+                plugins.append(plugin_info)
+            except (json.JSONDecodeError, IOError) as e:
+                logger.error(f"Failed to read or parse manifest.json for plugin '{plugin_name}': {e}")
+
+    return plugins
