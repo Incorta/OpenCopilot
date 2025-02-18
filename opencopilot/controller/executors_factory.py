@@ -1,6 +1,7 @@
 import importlib
 import json
 import os
+import sys
 
 
 class ExecutorsFactory:
@@ -41,7 +42,8 @@ class ExecutorsFactory:
             if not base_path:
                 raise EnvironmentError("SERVICE_DATA_PATH environment variable is not set")
 
-            manifest_path = os.path.join(base_path, "user_operators", plugin_name, "manifest.json")
+            user_operators_path = os.path.join(base_path, "user_operators")
+            manifest_path = os.path.join(user_operators_path, plugin_name, "manifest.json")
             if os.path.exists(manifest_path):
                 with open(manifest_path, "r") as manifest_file:
                     manifest_data = json.load(manifest_file)
@@ -51,6 +53,12 @@ class ExecutorsFactory:
                     if not executor_path or not executor_class:
                         raise ValueError(f"Invalid manifest.json: Missing executorPath or executorClass in {manifest_path}")
 
+                    # Ensure the executor_path is a fully-qualified module path
+                    if not executor_path.startswith("service_data.user_operators"):
+                        # Prepend the base namespace to make it fully qualified
+                        executor_path = f"service_data.user_operators.{executor_path}"
+                    # Temporarily add user_operators_path to sys.path
+                    sys.path.insert(0, user_operators_path)
                     try:
                         executor_module = importlib.import_module(executor_path)
                         op_executor = getattr(executor_module, executor_class, None)
@@ -58,6 +66,9 @@ class ExecutorsFactory:
                             raise ImportError(f"Executor class '{executor_class}' not found in module '{executor_path}'")
                     except ImportError as e:
                         raise ImportError(f"Failed to import executor from manifest: {e}")
+                    finally:
+                        # Remove the custom path from sys.path to avoid side effects
+                        sys.path.pop(0)
             else:
                 raise FileNotFoundError(f"Manifest file not found at: {manifest_path}")
 
