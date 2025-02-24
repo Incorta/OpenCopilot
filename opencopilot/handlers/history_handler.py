@@ -45,9 +45,16 @@ def summarize_session_queries(user_session, max_history_size=service_utils_const
 
     # Iterate through the user's session queries except the last one
     for query in user_session.queries_list[:-1]:
+        # Include only successful queries in history
+        state = query.get_state()
+        logger.system_message(query.get_user_query_msg() + " ,state: " + state)
+        if state != "Successful":  # TODO clean it to use the QueryState ENUM
+            continue
+
         query_msg = query.get_user_query_msg()
         tasks = query.get_tasks()
         context = query.get_context()
+
         # Check if there are any tasks
         if tasks:
             last_task = tasks[-1]
@@ -65,7 +72,6 @@ def summarize_session_queries(user_session, max_history_size=service_utils_const
                     })
                     query_length = count_prompt_tokens(query_msg) + count_prompt_tokens(query_result)
                     total_length += query_length  # Update the total length counter
-                logger.info(f"summary_queue: {json.dumps(list(summary_queue))}")
             except Exception as e:
                 logger.error("Couldn't get history object for the previous task" + str(e))
 
