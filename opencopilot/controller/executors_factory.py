@@ -45,7 +45,7 @@ class ExecutorsFactory:
             if os.path.exists(manifest_path):
                 with open(manifest_path, "r") as manifest_file:
                     manifest_data = json.load(manifest_file)
-                    executor_full_path = f'{manifest_data.get("executorPath", "")}.{plugin_name}'
+                    executor_full_path = f'{plugin_name}.{manifest_data.get("executorPath", "")}'
                     executor_class = manifest_data.get("executorClass", "")
 
                     if not executor_full_path or not executor_class:
