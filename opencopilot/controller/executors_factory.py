@@ -45,23 +45,23 @@ class ExecutorsFactory:
             if os.path.exists(manifest_path):
                 with open(manifest_path, "r") as manifest_file:
                     manifest_data = json.load(manifest_file)
-                    executor_path = manifest_data.get("executorPath", "")
+                    executor_full_path = f'{plugin_name}.{manifest_data.get("executorPath", "")}'
                     executor_class = manifest_data.get("executorClass", "")
 
-                    if not executor_path or not executor_class:
+                    if not executor_full_path or not executor_class:
                         raise ValueError(f"Invalid manifest.json: Missing executorPath or executorClass in {manifest_path}")
 
                     # Ensure the executor_path is a fully-qualified module path
-                    if not executor_path.startswith("service_data.user_operators"):
+                    if not executor_full_path.startswith("service_data.user_operators"):
                         # Prepend the base namespace to make it fully qualified
-                        executor_path = f"service_data.user_operators.{executor_path}"
+                        executor_full_path = f"service_data.user_operators.{executor_full_path}"
                     # Temporarily add user_operators_path to sys.path
                     sys.path.insert(0, user_operators_path)
                     try:
-                        executor_module = importlib.import_module(executor_path)
+                        executor_module = importlib.import_module(executor_full_path)
                         op_executor = getattr(executor_module, executor_class, None)
                         if op_executor is None:
-                            raise ImportError(f"Executor class '{executor_class}' not found in module '{executor_path}'")
+                            raise ImportError(f"Executor class '{executor_class}' not found in module '{executor_full_path}'")
                     except ImportError as e:
                         raise ImportError(f"Failed to import executor from manifest: {e}")
                     finally:
