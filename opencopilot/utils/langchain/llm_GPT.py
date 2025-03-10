@@ -24,7 +24,7 @@ LLM_RETRY_COUNT = 3
 def run(messages, model):
     llm, model_name = get_llm(model)
 
-    logger.system_message(str("Calling LLM-" + model["ai_provider"] + " " + model_name + " with: \n"))
+    logger.system_message(str("Calling LLM-" + model.ai_provider + " " + model_name + " with: \n"))
     logger.operator_input(messages)
 
     # Convert messages object to langchain messages model - TODO: it is better to use those objects from the beginning
@@ -67,7 +67,6 @@ def run(messages, model):
 
 
 def get_llm(model):
-    logger.info(model)
     if model.ai_provider == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
             api_key=model.api_key,
