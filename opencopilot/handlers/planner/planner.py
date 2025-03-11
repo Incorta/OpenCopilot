@@ -25,9 +25,9 @@ def get_next_todo_task_index(tasks_list):
     return -1
 
 
-def get_operators_info(context):
+def get_operators_info(context, user_session):
     if context is not None:
-        operators = operators_handler_module.op_functions_resolver(context)
+        operators = operators_handler_module.op_functions_resolver(context, user_session.get_configs().plugins)
     else:
         operators = operators_handler_module.op_functions
 
@@ -50,8 +50,8 @@ def formulate_operators_constraints(operators):
     return operators_constraints_str
 
 
-def construct_level_0_prompt(user_objective, context, session_summary_str, model):
-    supported_operators, operators_descriptions_str = get_operators_info(context)
+def construct_level_0_prompt(user_objective, context, session_summary_str, model, user_session):
+    supported_operators, operators_descriptions_str = get_operators_info(context, user_session)
     operators_constraints = formulate_operators_constraints(supported_operators)
 
     plan_schema = jinja_utils.load_template("resources/plan_schema.txt", {
@@ -88,7 +88,7 @@ def plan_level_0(user_objective, user_session, session_query, consumption_tracke
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
 
     # Construct planner request
-    planner_messages, _, supported_operators = construct_level_0_prompt(user_objective, session_query.get_context(), session_summary_str, model)
+    planner_messages, _, supported_operators = construct_level_0_prompt(user_objective, session_query.get_context(), session_summary_str, model, user_session)
     session_query.set_pending_agent_communications(component=constants.session_query_level0_plan, sub_component=constants.Request, value=copy.deepcopy(planner_messages))
 
     # Construct planner response
