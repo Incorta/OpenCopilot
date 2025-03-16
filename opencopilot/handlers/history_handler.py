@@ -47,7 +47,6 @@ def summarize_session_queries(user_session, max_history_size=service_utils_const
     for query in user_session.queries_list[:-1]:
         # Include only successful queries in history
         state = query.get_state()
-        logger.system_message(query.get_user_query_msg() + " ,state: " + state)
         if state != "Successful":  # TODO clean it to use the QueryState ENUM
             continue
 
