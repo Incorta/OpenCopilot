@@ -3,16 +3,25 @@ import importlib
 import json
 from collections import deque
 
-from opencopilot.configs.constants import Operator
 from opencopilot.configs import constants
 from opencopilot.configs.env import operators_path, service_utils_path
-from opencopilot.controller.executors_factory import ExecutorsFactory
 from opencopilot.utils.tokens_counter import count_prompt_tokens
 from opencopilot.utils import logger
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
 service_utils_constant_module = importlib.import_module(service_utils_path + ".constants")
 planner_llm_models_list = [constants.LLMModelPriority.primary_model.value, constants.LLMModelPriority.secondary_model.value]
+
+def prepare_history_object(tasks, context):
+    for task in tasks:
+        operator_name = task.get(constants.Operator, "")
+        if operator_name == "":
+            return {}
+        operator = operators_handler_module.op_functions_resolver(context)[operator_name]
+        operator_file = importlib.import_module(operator["file_name"])
+        if hasattr(operator_file, "process_result_for_summary"):
+            return operator_file.process_result_for_summary(tasks, operator_name)
+
 
 
 def construct_summary_object(user_session):
@@ -50,13 +59,8 @@ def summarize_session_queries(user_session, max_history_size=service_utils_const
         context = query.get_context()
         # Check if there are any tasks
         if tasks:
-            last_task = tasks[0]
-            operator_name = last_task.get(Operator, "")
-            operator = operators_handler_module.op_functions_resolver(context)[operator_name]
             try:
-                op_executor = ExecutorsFactory().get_op_executor(operator)
-                query_result = op_executor.prepare_history_object(operator, copy.deepcopy(tasks), context)
-
+                query_result = prepare_history_object(copy.deepcopy(tasks), context)
                 # Add the new query and result to the queue
                 if query_result:
                     summary_queue.append({
