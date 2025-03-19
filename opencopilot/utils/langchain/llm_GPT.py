@@ -24,7 +24,7 @@ LLM_RETRY_COUNT = 3
 def run(messages, model):
     llm, model_name = get_llm(model)
 
-    logger.system_message(str("Calling LLM-" + model.ai_provider + " " + model_name + " with: \n"))
+    logger.system_message(str("Calling LLM-" + model.provider + " " + model_name + " with: \n"))
     logger.operator_input(messages)
 
     # Convert messages object to langchain messages model - TODO: it is better to use those objects from the beginning
@@ -55,7 +55,7 @@ def run(messages, model):
         except APIFailureException as e:
             retry_count += 1
             if retry_count < LLM_RETRY_COUNT:
-                logger.system_message(f"[FAIL {retry_count}]: An APIFailureException occurred, retrying the call to {model['ai_provider'] + model_name}")
+                logger.system_message(f"[FAIL {retry_count}]: An APIFailureException occurred, retrying the call to {model['provider'] + model_name}")
                 llm.temperature += 0.1
                 sleep(5)
                 continue
@@ -67,36 +67,36 @@ def run(messages, model):
 
 
 def get_llm(model):
-    if model.ai_provider == SupportedAIProviders.openai.value["provider_name"]:
+    if model.provider == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
-            api_key=model.api_key,
-            base_url=model.api_base_url,
-            model=model.model_name,
-            temperature=get_model_temperature(model.ai_provider),
+            api_key=model.provider_args["api_key"],
+            base_url=model.provider_args["api_base_url"],
+            model=model.provider_args["model_name"],
+            temperature=get_model_temperature(model.provider),
             max_tokens=4096,
-        ), model.model_name
-    elif model.ai_provider == SupportedAIProviders.azure_openai.value["provider_name"]:
+        ), model.provider_args["model_name"]
+    elif model.provider == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(
-            openai_api_key=model.api_key,
+            openai_api_key=model.provider_args["api_key"],
             openai_api_version="2023-05-15",
-            azure_endpoint=model.api_base_url,
-            deployment_name=model.model_name,
-            temperature=get_model_temperature(model.ai_provider),
-        ), model.model_name
-    elif model.ai_provider == SupportedAIProviders.google_gemini.value["provider_name"]:
+            azure_endpoint=model.provider_args["api_base_url"],
+            deployment_name=model.provider_args["model_name"],
+            temperature=get_model_temperature(model.provider),
+        ), model.provider_args["model_name"]
+    elif model.provider == SupportedAIProviders.google_gemini.value["provider_name"]:
         return ChatGoogleGenerativeAI(
-            model=model.model_name,
-            google_api_key=model.api_key,
-            temperature=get_model_temperature(model.ai_provider),
+            model=model.provider_args["model_name"],
+            google_api_key=model.provider_args["api_key"],
+            temperature=get_model_temperature(model.provider),
             convert_system_message_to_human=True
-        ), model.model_name
-    elif model.ai_provider == SupportedAIProviders.aixplain.value["provider_name"]:
-        os.environ["TEAM_API_KEY"] = model.api_key
+        ), model.provider_args["model_name"]
+    elif model.provider == SupportedAIProviders.aixplain.value["provider_name"]:
+        os.environ["TEAM_API_KEY"] = model.provider_args["api_key"]
         from opencopilot.utils.langchain.aixplain import AixplainChatModel
         return AixplainChatModel(
-            model_id=model.model_name,
-            temperature=get_model_temperature(model.ai_provider),
+            model_id=model.provider_args["model_name"],
+            temperature=get_model_temperature(model.provider),
             max_tokens=4096
-        ), model.model_name
+        ), model.provider_args["model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
