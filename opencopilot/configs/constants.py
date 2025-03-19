@@ -29,6 +29,5 @@ TODO = "TODO"
 
 
 class LLMModelPriority(Enum):
-    primary_model = "primary_model"
-    secondary_model = "secondary_model"
-    embedding_model = "embedding_model"
+    primary_model = "primary"
+    secondary_model = "secondary"

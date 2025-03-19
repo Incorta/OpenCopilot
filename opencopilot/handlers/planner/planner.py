@@ -4,12 +4,12 @@ import importlib
 
 from opencopilot.configs import constants
 from opencopilot.configs.ai_providers import get_planner_prompt_file_path
+from opencopilot.configs.constants import LLMModelPriority
 from opencopilot.configs.env import operators_path
 from opencopilot.handlers.history_handler import construct_summary_object
 from opencopilot.utils import jinja_utils
 from opencopilot.utils.exceptions import UnknownCommandError
 from opencopilot.utils.langchain import llm_GPT
-from opencopilot.utils.langchain.llm_GPT import resolve_llm_model
 from opencopilot.utils.llm_evaluator import evaluate_llm_reply
 
 operators_handler_module = importlib.import_module(operators_path + ".operators_handler")
@@ -59,7 +59,7 @@ def construct_level_0_prompt(user_objective, context, session_summary_str, model
         "service_name": operators_handler_module.service_name,
         "operators": supported_operators.keys()
     })
-    system_content = jinja_utils.load_template(get_planner_prompt_file_path(model["ai_provider"], "system"), {
+    system_content = jinja_utils.load_template(get_planner_prompt_file_path(model.provider, "system"), {
         "session_summary": session_summary_str,
         "service_name": operators_handler_module.service_name,
         "op_descriptions": operators_descriptions_str,
@@ -67,7 +67,7 @@ def construct_level_0_prompt(user_objective, context, session_summary_str, model
         "plan_schema": plan_schema,
         "op_constraints": operators_constraints
     })
-    user_content = jinja_utils.load_template(get_planner_prompt_file_path(model["ai_provider"], "user"), {
+    user_content = jinja_utils.load_template(get_planner_prompt_file_path(model.provider, "user"), {
         "service_name": operators_handler_module.group_name,
         "user_objective": user_objective
     })
@@ -82,8 +82,8 @@ def construct_level_0_prompt(user_objective, context, session_summary_str, model
     return planner_messages, plan_schema, supported_operators
 
 
-def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response):
-    model = resolve_llm_model(planner_llm_models_list)
+def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response, copilot_configs):
+    model = copilot_configs.llm_models[LLMModelPriority.primary_model.value]
 
     session_summary = construct_summary_object(user_session)
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
