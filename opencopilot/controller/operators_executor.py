@@ -17,5 +17,5 @@ class OperatorExecutor(ABC):
     @staticmethod
     def prepare_history_object(operator, tasks, context):
         operator_file = importlib.import_module(operator["file_name"])
-        if hasattr(operator_file, "process_result_for_summary"):
-            return operator_file.process_result_for_summary(tasks, context)
+        if hasattr(operator_file, "aggregate_result_for_summary"):
+            return operator_file.aggregate_result_for_summary(tasks, context)
