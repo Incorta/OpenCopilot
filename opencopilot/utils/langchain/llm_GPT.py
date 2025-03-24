@@ -10,53 +10,21 @@ from langchain.schema import (
     SystemMessage
 )
 import opencopilot.utils.logger as logger
-from opencopilot.configs.LLM_Configurations import LLMConfigurations
 from opencopilot.configs.ai_providers import SupportedAIProviders, get_model_temperature
 from opencopilot.utils.consumption_tracker import ConsumptionTracker
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException, LLMException
-from opencopilot.configs.constants import LLMModelPriority
 from langchain_community.callbacks import get_openai_callback
 from langchain_google_genai import ChatGoogleGenerativeAI
 
 from opencopilot.utils.utilities import extract_json_block
 
-llm_configs = None
 LLM_RETRY_COUNT = 3
-
-
-def initialize_configurations():
-    global llm_configs
-    llm_configs = LLMConfigurations.execute()
-
-
-def update_configurations(key1, value1, key2=None, value2=None):
-    llm_configs[LLMModelPriority.primary_model.value][key1] = value1
-    if key2 is not None:
-        llm_configs[LLMModelPriority.secondary_model.value][key2] = value2
-
-
-def resolve_llm_model(llm_names, priority_list_mode=True):
-    model = None
-    if priority_list_mode:
-        # Select the first found configured model
-        for llm_model in llm_names:
-            if llm_model in llm_configs and "ai_provider" in llm_configs[llm_model]:
-                model = llm_configs[llm_model]
-                break
-    else:
-        # Resolve extra predefined model
-        model = llm_names
-
-    if model is None:
-        raise UnsupportedAIProviderException("Didn't find configurations of any of the desired models, "
-                                             "Please set the configuration of the desired model in the env!")
-    return model
 
 
 def run(messages, model):
     llm, model_name = get_llm(model)
 
-    logger.system_message(str("Calling LLM-" + model["ai_provider"] + " " + model_name + " with: \n"))
+    logger.system_message(str("Calling LLM-" + model.provider + " " + model_name + " with: \n"))
     logger.operator_input(messages)
 
     # Convert messages object to langchain messages model - TODO: it is better to use those objects from the beginning
@@ -87,7 +55,7 @@ def run(messages, model):
         except APIFailureException as e:
             retry_count += 1
             if retry_count < LLM_RETRY_COUNT:
-                logger.system_message(f"[FAIL {retry_count}]: An APIFailureException occurred, retrying the call to {model['ai_provider'] + model_name}")
+                logger.system_message(f"[FAIL {retry_count}]: An APIFailureException occurred, retrying the call to {model['provider'] + model_name}")
                 llm.temperature += 0.1
                 sleep(5)
                 continue
@@ -99,37 +67,36 @@ def run(messages, model):
 
 
 def get_llm(model):
-    logger.info(model)
-    if model["ai_provider"] == SupportedAIProviders.openai.value["provider_name"]:
+    if model.provider == SupportedAIProviders.openai.value["provider_name"]:
         return ChatOpenAI(
-            api_key=model["openai_api_text_completion_key"],
-            base_url=model.get("openai_api_text_completion_baseurl"),
-            model=model["openai_api_text_completion_model_name"],
-            temperature=get_model_temperature(model["ai_provider"]),
+            api_key=model.provider_args["api_key"],
+            base_url=model.provider_args["api_base_url"],
+            model=model.provider_args["model_name"],
+            temperature=get_model_temperature(model.provider),
             max_tokens=4096,
-        ), model["openai_api_text_completion_model_name"]
-    elif model["ai_provider"] == SupportedAIProviders.azure_openai.value["provider_name"]:
+        ), model.provider_args["model_name"]
+    elif model.provider == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(
-            openai_api_key=model["azure_openai_text_completion_key"],
+            openai_api_key=model.provider_args["api_key"],
             openai_api_version="2023-05-15",
-            azure_endpoint=model["azure_openai_text_completion_endpoint"],
-            deployment_name=model["azure_openai_text_completion_deployment_name"],
-            temperature=get_model_temperature(model["ai_provider"]),
-        ), model["azure_openai_text_completion_deployment_name"]
-    elif model["ai_provider"] == SupportedAIProviders.google_gemini.value["provider_name"]:
+            azure_endpoint=model.provider_args["api_base_url"],
+            deployment_name=model.provider_args["model_name"],
+            temperature=get_model_temperature(model.provider),
+        ), model.provider_args["model_name"]
+    elif model.provider == SupportedAIProviders.google_gemini.value["provider_name"]:
         return ChatGoogleGenerativeAI(
-            model=model["google_gemini_text_completion_model_name"],
-            google_api_key=model["google_gemini_text_completion_key"],
-            temperature=get_model_temperature(model["ai_provider"]),
+            model=model.provider_args["model_name"],
+            google_api_key=model.provider_args["api_key"],
+            temperature=get_model_temperature(model.provider),
             convert_system_message_to_human=True
-        ), model["google_gemini_text_completion_model_name"]
-    elif model["ai_provider"] == SupportedAIProviders.aixplain.value["provider_name"]:
-        os.environ["TEAM_API_KEY"] = model["aixplain_text_completion_key"]
+        ), model.provider_args["model_name"]
+    elif model.provider == SupportedAIProviders.aixplain.value["provider_name"]:
+        os.environ["TEAM_API_KEY"] = model.provider_args["api_key"]
         from opencopilot.utils.langchain.aixplain import AixplainChatModel
         return AixplainChatModel(
-            model_id=model["aixplain_text_completion_model_id"],
-            temperature=get_model_temperature(model["ai_provider"]),
+            model_id=model.provider_args["model_name"],
+            temperature=get_model_temperature(model.provider),
             max_tokens=4096
-        ), model["aixplain_text_completion_model_id"]
+        ), model.provider_args["model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
