@@ -55,7 +55,11 @@ def summarize_session_queries(user_session, max_history_size=service_utils_const
             operator = operators_handler_module.op_functions_resolver(context)[operator_name]
             try:
                 op_executor = ExecutorsFactory().get_op_executor(operator)
-                query_result = op_executor.prepare_history_object(operator, copy.deepcopy(tasks), context)
+                query_result = ""
+                if query.get_layout_renderer():
+                    query_result = query.get_layout_renderer().generate_summary_from_tasks(copy.deepcopy(tasks), context)
+                else:
+                    query_result = op_executor.prepare_history_object(operator, copy.deepcopy(tasks))
 
                 # Add the new query and result to the queue
                 if query_result:
