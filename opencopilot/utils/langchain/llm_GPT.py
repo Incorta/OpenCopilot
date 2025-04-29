@@ -1,5 +1,3 @@
-import os
-
 from time import sleep
 
 import langchain
@@ -89,14 +87,6 @@ def get_llm(model):
             google_api_key=model.provider_args["api_key"],
             temperature=get_model_temperature(model.provider),
             convert_system_message_to_human=True
-        ), model.provider_args["model_name"]
-    elif model.provider == SupportedAIProviders.aixplain.value["provider_name"]:
-        os.environ["TEAM_API_KEY"] = model.provider_args["api_key"]
-        from opencopilot.utils.langchain.aixplain import AixplainChatModel
-        return AixplainChatModel(
-            model_id=model.provider_args["model_name"],
-            temperature=get_model_temperature(model.provider),
-            max_tokens=4096
         ), model.provider_args["model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
