@@ -37,17 +37,6 @@ class SupportedAIProviders(Enum):
             "executor": "resources/tasks_to_command_prompt.txt"
         }
     }
-    aixplain = {
-        "provider_name": "aixplain",
-        "temperature": 0.1,
-        "prompts_paths": {
-            "planner": {
-                "system": "resources/planner_level0_prompt_system.txt",
-                "user": "resources/planner_level0_prompt_user.txt"
-            },
-            "executor": "resources/tasks_to_command_prompt.txt"
-        }
-    }
 
 
 def get_model_by_name(provider_name):
