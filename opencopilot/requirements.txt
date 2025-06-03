@@ -11,3 +11,4 @@ langchain-google-genai==2.0.7
 langchain_community==0.3.12
 google-generativeai~=0.8.3
 tiktoken~=0.8.0
+langfuse==2.60.7

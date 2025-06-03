@@ -2,21 +2,38 @@ from time import sleep
 
 import langchain
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
+from langchain.callbacks.base import Callbacks
 from langchain.schema import (
     AIMessage,
     HumanMessage,
     SystemMessage
 )
 import opencopilot.utils.logger as logger
+from opencopilot.utils.utilities import extract_json_block
 from opencopilot.configs.ai_providers import SupportedAIProviders, get_model_temperature
+from opencopilot.configs.env import langfuse_public_key, langfuse_secret_key, langfuse_host
 from opencopilot.utils.consumption_tracker import ConsumptionTracker
 from opencopilot.utils.exceptions import APIFailureException, UnsupportedAIProviderException, LLMException
 from langchain_community.callbacks import get_openai_callback
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langfuse.callback import CallbackHandler
 
-from opencopilot.utils.utilities import extract_json_block
 
 LLM_RETRY_COUNT = 3
+callback_handlers: Callbacks | None = None
+
+def get_callback_handlers() -> Callbacks:
+    global callback_handlers
+    if callback_handlers is None:
+        callback_handlers = []
+        if langfuse_public_key and langfuse_secret_key and langfuse_host:
+            langfuse_handler = CallbackHandler(
+                public_key=langfuse_public_key,
+                secret_key=langfuse_secret_key,
+                host=langfuse_host
+            )
+            callback_handlers.append(langfuse_handler)
+    return callback_handlers
 
 
 def run(messages, model):
@@ -72,6 +89,7 @@ def get_llm(model):
             model=model.provider_args["model_name"],
             temperature=get_model_temperature(model.provider),
             max_tokens=4096,
+            callbacks=get_callback_handlers(),
         ), model.provider_args["model_name"]
     elif model.provider == SupportedAIProviders.azure_openai.value["provider_name"]:
         return AzureChatOpenAI(
@@ -80,13 +98,15 @@ def get_llm(model):
             azure_endpoint=model.provider_args["api_base_url"],
             deployment_name=model.provider_args["model_name"],
             temperature=get_model_temperature(model.provider),
+            callbacks=get_callback_handlers(),
         ), model.provider_args["model_name"]
     elif model.provider == SupportedAIProviders.google_gemini.value["provider_name"]:
         return ChatGoogleGenerativeAI(
             model=model.provider_args["model_name"],
             google_api_key=model.provider_args["api_key"],
             temperature=get_model_temperature(model.provider),
-            convert_system_message_to_human=True
+            convert_system_message_to_human=True,
+            callbacks=get_callback_handlers(),
         ), model.provider_args["model_name"]
     else:
         raise UnsupportedAIProviderException("Unsupported AI Provider")
