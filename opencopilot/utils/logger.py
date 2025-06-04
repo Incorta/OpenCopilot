@@ -201,7 +201,7 @@ def predefined_message(message):
 def print_tasks(tasks_json_array):
     for task in tasks_json_array:
         color = COLOR_YELLOW if task.get("status") == "TODO" else COLOR_GREEN
-        task_json = json.dumps(task, indent=2)
+        task_json = json.dumps(task, indent=2, ensure_ascii=False)
         print_colored(task_json, color)
         get_logger().debug(task_json)
 
