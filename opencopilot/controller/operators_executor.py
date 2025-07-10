@@ -10,7 +10,6 @@ class OperatorExecutor(ABC):
 
     @staticmethod
     def finalize(task_context, result):
-        task_context.tasks[task_context.task_index][constants.Status] = constants.DONE
         task_context.tasks[task_context.task_index][constants.Result] = result
 
     @staticmethod
