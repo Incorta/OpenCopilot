@@ -97,7 +97,6 @@ def get_llm(model):
             openai_api_version="2023-05-15",
             azure_endpoint=model.provider_args["api_base_url"],
             deployment_name=model.provider_args["model_name"],
-            temperature=get_model_temperature(model.provider),
             callbacks=get_callback_handlers(),
         ), model.provider_args["model_name"]
     elif model.provider == SupportedAIProviders.google_gemini.value["provider_name"]:
