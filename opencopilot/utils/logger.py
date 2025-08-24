@@ -3,6 +3,9 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 from termcolor import colored
+import threading
+import traceback
+from functools import wraps
 import json
 import zipfile
 from datetime import datetime
@@ -82,6 +85,50 @@ class ZipRotatingFileHandler(RotatingFileHandler):
         if not self.delay:
             self.stream = self._open()
 
+class ThreadSafeGuard:
+    """
+    A descriptor that provides a thread-safe, re-entrant guard.
+    Each instance of the class using this descriptor gets its own
+    thread-local state.
+    """
+    def __init__(self, func):
+        self.func = func
+        # Use __set_name__ to initialize state storage per owner class
+        self._thread_local_storage_name = f"_{func.__name__}_thread_local"
+
+    def __get__(self, instance, owner):
+        # When the method is accessed, return a bound version of the wrapper
+        if instance is None:
+            return self # Allow access from the class itself
+        
+        # This makes the decorator work on instance methods
+        @wraps(self.func)
+        def wrapper(*args, **kwargs):
+            # Get or create the thread-local storage for this instance
+            if not hasattr(instance, self._thread_local_storage_name):
+                setattr(instance, self._thread_local_storage_name, threading.local())
+            thread_local = getattr(instance, self._thread_local_storage_name)
+
+            if getattr(thread_local, 'is_handling_error', False):
+                return
+
+            try:
+                thread_local.is_handling_error = True
+                # Call the original function with the instance and args
+                return self.func(instance, *args, **kwargs)
+            except Exception as e:
+                try:
+                    error_context = self.func.__name__.upper()
+                    # Use simpler string formatting that is less likely to recurse
+                    instance.original_stream.write(f"--- FATAL ERROR IN LOGGING {error_context}: {type(e).__name__}: {e} ---\n")
+                    traceback.print_exc(file=instance.original_stream)
+                    instance.original_stream.write("--- END OF FATAL ERROR ---\n")
+                except:
+                    pass
+            finally:
+                thread_local.is_handling_error = False
+        return wrapper
+
 
 class StreamToLogger(object):
     def __init__(self, logger, log_level, original_stream):
@@ -90,15 +137,26 @@ class StreamToLogger(object):
         self.linebuf = ''
         self.original_stream = original_stream
 
+    @ThreadSafeGuard
     def write(self, buf):
+        """Writes a buffer to the logger, protected by the guard."""
         for line in buf.rstrip().splitlines():
             self.logger.log(self.log_level, line.rstrip())
-        self.original_stream.write(buf)  # Write to the original stream as well
+        self.original_stream.write(buf)
 
+    @ThreadSafeGuard
     def flush(self):
+        """Flushes handlers, protected by the guard."""
         for handler in self.logger.handlers:
             handler.flush()
-        self.original_stream.flush()  # Flush the original stream as well
+        self.original_stream.flush()
+
+    def __getattr__(self, attr):
+        """
+        Delegate any attribute access that StreamToLogger doesn't have
+        to the original stream. This makes it a more complete proxy.
+        """
+        return getattr(self.original_stream, attr)
 
 
 __internal_logger = None  # Ensure global declaration here

@@ -144,7 +144,7 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
         **clean_provider_defaults,
         **clean_saved_config,
         **clean_runtime_args,
-        "callbacks": get_callback_handlers()
+        "callbacks": get_callback_handlers(),
     }
 
     # 3. Instantiate the correct provider client
@@ -153,15 +153,24 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
 
     # --- OpenAI Provider ---
     if provider_name == SupportedAIProviders.openai.value["provider_name"]:
+        key_map = {
+            "max_tokens": "max_completion_tokens",
+        }
         constructor_keys = {
-            "api_key", "base_url", "model", "temperature", "max_tokens",
-            "max_retries", "callbacks", "verbosity", "reasoning_effort"
+            "api_key", "base_url", "model", "temperature",
+            "max_retries", "callbacks", "verbosity", "reasoning_effort",
+            "http_client",
         }
-        constructor_kwargs = {
-            k: v for k, v in final_args.items() if k in constructor_keys
-        }
+        constructor_kwargs = {}
+        for key, value in final_args.items():
+            if key in constructor_keys:
+                constructor_kwargs[key] = value
+            elif key in key_map:
+                constructor_kwargs[key_map[key]] = value
         if "base_url" in constructor_kwargs:
             constructor_kwargs["base_url"] = str(constructor_kwargs["base_url"])
+        if "max_completion_tokens" in constructor_kwargs:
+            constructor_kwargs["max_tokens"] = constructor_kwargs["max_completion_tokens"]
         return ChatOpenAI(**constructor_kwargs), model_name
 
     # --- Azure OpenAI Provider ---
@@ -174,7 +183,8 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
         }
         constructor_keys = {
             "temperature", "max_retries",
-            "callbacks", "verbosity", "reasoning_effort"
+            "callbacks", "verbosity", "reasoning_effort",
+            "http_client",
         }
         constructor_kwargs = {"openai_api_version": "2023-05-15"}
         for key, value in final_args.items():
@@ -190,7 +200,8 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
         key_map = {"api_key": "google_api_key"}
         constructor_keys = {
             "model", "temperature", "max_tokens",
-            "callbacks", "verbosity", "reasoning_effort"
+            "callbacks", "verbosity", "reasoning_effort",
+            "http_client",
         }
         constructor_kwargs = {"convert_system_message_to_human": True}
         for key, value in final_args.items():
