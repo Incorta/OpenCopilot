@@ -87,8 +87,8 @@ class StreamToLogger(object):
     def __init__(self, logger, log_level, original_stream):
         self.logger = logger
         self.log_level = log_level
-        self.original_stream = original_stream
         self.linebuf = ''
+        self.original_stream = original_stream
         self._is_logging = False
 
     def write(self, buf):
