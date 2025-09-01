@@ -87,19 +87,38 @@ class StreamToLogger(object):
     def __init__(self, logger, log_level, original_stream):
         self.logger = logger
         self.log_level = log_level
-        self.linebuf = ''
         self.original_stream = original_stream
+        self.linebuf = ''
+        self._is_logging = False
 
     def write(self, buf):
-        for line in buf.rstrip().splitlines():
-            self.logger.log(self.log_level, line.rstrip())
-        self.original_stream.write(buf)  # Write to the original stream as well
+        if self._is_logging:
+            self.original_stream.write(buf)
+            return
+
+        try:
+            self._is_logging = True
+            for line in buf.rstrip().splitlines():
+                self.logger.log(self.log_level, line.rstrip())
+            self.original_stream.write(buf)
+        finally:
+            self._is_logging = False
 
     def flush(self):
+        if self._is_logging:
+            return
+
         for handler in self.logger.handlers:
             handler.flush()
-        self.original_stream.flush()  # Flush the original stream as well
+        self.original_stream.flush()
 
+    # --- ADD THIS METHOD ---
+    def __getattr__(self, attr):
+        """
+        Delegate any attribute access that StreamToLogger doesn't have
+        to the original stream. This makes it a more complete proxy.
+        """
+        return getattr(self.original_stream, attr)
 
 __internal_logger = None  # Ensure global declaration here
 
