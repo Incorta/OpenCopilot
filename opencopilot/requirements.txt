@@ -1,4 +1,4 @@
-openai==1.55.3
+openai==1.99.7
 termcolor~=2.3.0
 jinja2~=3.1.2
 pydantic==2.10.3
@@ -6,9 +6,9 @@ utils~=1.0.1
 pytest~=7.3.1
 tabulate~=0.9.0
 langchain==0.3.12
-langchain-openai==0.2.0
+langchain-openai==0.3.19
 langchain-google-genai==2.0.7
 langchain_community==0.3.12
-google-generativeai~=0.8.3
+google-generativeai==0.8.5
 tiktoken~=0.8.0
 langfuse==2.60.7
