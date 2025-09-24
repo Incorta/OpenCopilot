@@ -19,7 +19,7 @@ def construct_summary_object(user_session):
     return session_summary
 
 
-def summarize_session_queries(user_session, max_history_size=service_utils_constant_module.HISTORY_LIMIT):
+def summarize_session_queries(user_session, max_history_size=token_limit_configs.history_limit):
     """
     This function generates a summary of a user's session queries using a queue-based approach.
 
