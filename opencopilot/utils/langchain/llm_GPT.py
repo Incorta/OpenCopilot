@@ -82,31 +82,50 @@ def run(messages, model):
 
 
 def get_llm(model):
+
+    # Get any extra constructor arguments from settings, defaulting to an empty dict
+    # Safely get any extra constructor arguments from settings
+    extra_kwargs = model.settings.get("constructor_args", {})
+    # --- OpenAI Provider ---
     if model.provider == SupportedAIProviders.openai.value["provider_name"]:
-        return ChatOpenAI(
-            api_key=model.provider_args["api_key"],
-            base_url=model.provider_args["api_base_url"],
-            model=model.provider_args["model_name"],
-            temperature=get_model_temperature(model.provider),
-            max_tokens=4096,
-            callbacks=get_callback_handlers(),
-        ), model.provider_args["model_name"]
+        base_kwargs = {
+            "api_key": model.provider_args.get("api_key"),
+            "base_url": model.provider_args.get("api_base_url"),
+            "model": model.provider_args["model_name"],
+            "temperature": get_model_temperature(model.provider),
+            "max_tokens": 4096,
+            "callbacks": get_callback_handlers(),
+        }
+        final_kwargs = {**base_kwargs, **extra_kwargs}
+        return ChatOpenAI(**final_kwargs), model.provider_args["model_name"]
+
+    # --- Azure OpenAI Provider ---
     elif model.provider == SupportedAIProviders.azure_openai.value["provider_name"]:
-        return AzureChatOpenAI(
-            openai_api_key=model.provider_args["api_key"],
-            openai_api_version="2023-05-15",
-            azure_endpoint=model.provider_args["api_base_url"],
-            deployment_name=model.provider_args["model_name"],
-            temperature=get_model_temperature(model.provider),
-            callbacks=get_callback_handlers(),
-        ), model.provider_args["model_name"]
+        base_kwargs = {
+            "openai_api_key": model.provider_args.get("api_key"),
+            "openai_api_version": "2023-05-15",
+            "azure_endpoint": model.provider_args.get("api_base_url"),
+            "deployment_name": model.provider_args["model_name"],
+            "temperature": get_model_temperature(model.provider),
+            "callbacks": get_callback_handlers(),
+        }
+        final_kwargs = {**base_kwargs, **extra_kwargs}
+        return AzureChatOpenAI(**final_kwargs), model.provider_args["model_name"]
+
+    # --- Google Gemini Provider ---
     elif model.provider == SupportedAIProviders.google_gemini.value["provider_name"]:
-        return ChatGoogleGenerativeAI(
-            model=model.provider_args["model_name"],
-            google_api_key=model.provider_args["api_key"],
-            temperature=get_model_temperature(model.provider),
-            convert_system_message_to_human=True,
-            callbacks=get_callback_handlers(),
-        ), model.provider_args["model_name"]
+        base_kwargs = {
+            "model": model.provider_args["model_name"],
+            "google_api_key": model.provider_args.get("api_key"),
+            "temperature": get_model_temperature(model.provider),
+            "convert_system_message_to_human": True,
+            "callbacks": get_callback_handlers(),
+        }
+        final_kwargs = {**base_kwargs, **extra_kwargs}
+        return ChatGoogleGenerativeAI(**final_kwargs), model.provider_args["model_name"]
+
+    # --- Fallback for unsupported providers ---
     else:
-        raise UnsupportedAIProviderException("Unsupported AI Provider")
+        raise UnsupportedAIProviderException(
+            f"Unsupported AI Provider: '{model.provider}'"
+        )
