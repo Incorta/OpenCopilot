@@ -1,4 +1,5 @@
 from time import sleep
+from enum import StrEnum
 
 import langchain
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
@@ -8,6 +9,8 @@ from langchain.schema import (
     HumanMessage,
     SystemMessage
 )
+from pydantic import BaseModel
+
 import opencopilot.utils.logger as logger
 from opencopilot.utils.utilities import extract_json_block
 from opencopilot.configs.ai_providers import SupportedAIProviders, get_model_temperature
@@ -18,9 +21,34 @@ from langchain_community.callbacks import get_openai_callback
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langfuse.callback import CallbackHandler
 
-
 LLM_RETRY_COUNT = 3
 callback_handlers: Callbacks | None = None
+
+
+# --- Pydantic Validation for Runtime Arguments ---
+class ReasoningEffort(StrEnum):
+    MINIMAL = "minimal"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class Verbosity(StrEnum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class ConstructorArgs(BaseModel):
+    """A strict schema for runtime constructor arguments."""
+    reasoning_effort: ReasoningEffort | None = None
+    verbosity: Verbosity | None = None
+
+    class Config:
+        extra = 'forbid'
+
+
+# -------------------------------------------------
 
 def get_callback_handlers() -> Callbacks:
     global callback_handlers
@@ -81,11 +109,24 @@ def run(messages, model):
             raise LLMException(f"LLM encountered an error: {str(e)}") from e
 
 
-def get_llm(model):
+def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
+    """
+    Instantiates an LLM client, merging configuration arguments with runtime overrides.
 
-    # Get any extra constructor arguments from settings, defaulting to an empty dict
-    # Safely get any extra constructor arguments from settings
-    extra_kwargs = model.settings.get("constructor_args", {})
+    Args:
+        model: The LLMConfig object from the configuration files.
+        runtime_kwargs (Optional[ConstructorArgs]): Validated runtime arguments that
+                                                    override any other settings.
+    """
+    # 1. Get arguments from the model's configuration file
+    config_kwargs = model.settings.get("constructor_args", {})
+
+    # 2. Convert runtime Pydantic model to a dictionary if provided
+    runtime_args_dict = runtime_kwargs.model_dump(exclude_unset=True) if runtime_kwargs else {}
+
+    # 3. Merge arguments: runtime settings override config file settings
+    merged_kwargs = {**config_kwargs, **runtime_args_dict}
+
     # --- OpenAI Provider ---
     if model.provider == SupportedAIProviders.openai.value["provider_name"]:
         base_kwargs = {
@@ -96,7 +137,7 @@ def get_llm(model):
             "max_tokens": 4096,
             "callbacks": get_callback_handlers(),
         }
-        final_kwargs = {**base_kwargs, **extra_kwargs}
+        final_kwargs = {**base_kwargs, **merged_kwargs}
         return ChatOpenAI(**final_kwargs), model.provider_args["model_name"]
 
     # --- Azure OpenAI Provider ---
@@ -109,7 +150,7 @@ def get_llm(model):
             "temperature": get_model_temperature(model.provider),
             "callbacks": get_callback_handlers(),
         }
-        final_kwargs = {**base_kwargs, **extra_kwargs}
+        final_kwargs = {**base_kwargs, **merged_kwargs}
         return AzureChatOpenAI(**final_kwargs), model.provider_args["model_name"]
 
     # --- Google Gemini Provider ---
@@ -121,7 +162,8 @@ def get_llm(model):
             "convert_system_message_to_human": True,
             "callbacks": get_callback_handlers(),
         }
-        final_kwargs = {**base_kwargs, **extra_kwargs}
+        # Gemini does not support reasoning args, so we pass merged_kwargs directly
+        final_kwargs = {**base_kwargs, **merged_kwargs}
         return ChatGoogleGenerativeAI(**final_kwargs), model.provider_args["model_name"]
 
     # --- Fallback for unsupported providers ---
