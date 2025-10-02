@@ -141,17 +141,17 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
     # Pydantic defaults (max_tokens=4096, max_retries=2) will be included here.
     runtime_args_dict = runtime_kwargs.model_dump() if runtime_kwargs else {}
 
+    clean_provider_defaults = {k: v for k, v in provider_defaults.items() if v is not None}
+    clean_saved_config = {k: v for k, v in saved_config_kwargs.items() if v is not None}
+    clean_runtime_args = {k: v for k, v in runtime_args_dict.items() if v is not None}
 
     # 2. Merge all arguments with a clear precedence
     final_args = {
-        **provider_defaults, # lowest precedence
-        **saved_config_kwargs,
-        **runtime_args_dict # highest precedence
+        **clean_provider_defaults, # lowest precedence
+        **clean_saved_config,
+        **clean_runtime_args, # highest precedence
+        "callbacks": get_callback_handlers()
     }
-
-    # Add callbacks, which are always included
-    final_args["callbacks"] = get_callback_handlers()
-
 
     # 3. Instantiate the correct provider client
 
