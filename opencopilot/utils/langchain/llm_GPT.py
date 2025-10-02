@@ -9,7 +9,7 @@ from langchain.schema import (
     HumanMessage,
     SystemMessage
 )
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, HttpUrl
 
 import opencopilot.utils.logger as logger
 from opencopilot.utils.utilities import extract_json_block
@@ -41,6 +41,12 @@ class Verbosity(StrEnum):
 
 class ConstructorArgs(BaseModel):
     """A strict schema for runtime constructor arguments."""
+    temperature: float | None = Field(None, ge=0.0, le=2.0, description="The model's temperature.")
+    max_tokens: int | None = Field(default=4096, gt=0, description="The maximum number of tokens to generate.")
+    base_url: HttpUrl | None = None
+    api_key: str | None = None
+    model: str | None = None
+    max_retries: int | None = Field(default=2, ge=0, description="Maximum number of retries.") # <-- Added here
     reasoning_effort: ReasoningEffort | None = None
     verbosity: Verbosity | None = None
 
@@ -111,63 +117,90 @@ def run(messages, model):
 
 def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
     """
-    Instantiates an LLM client, merging configuration arguments with runtime overrides.
+    Instantiates an LLM client by merging provider, saved, and runtime configurations.
 
     Args:
         model: The LLMConfig object from the configuration files.
         runtime_kwargs (Optional[ConstructorArgs]): Validated runtime arguments that
                                                     override any other settings.
     """
-    # 1. Get arguments from the model's configuration file
-    config_kwargs = model.settings.get("constructor_args", {})
+    # 1. Prepare configuration layers
 
-    # 2. Convert runtime Pydantic model to a dictionary if provided
-    runtime_args_dict = runtime_kwargs.model_dump(exclude_unset=True) if runtime_kwargs else {}
+    # Layer 1: Provider-specific defaults (lowest precedence)
+    provider_defaults = {
+        "api_key": model.provider_args.get("api_key"),
+        "base_url": model.provider_args.get("api_base_url"),
+        "model": model.provider_args.get("model_name"),
+        "temperature": get_model_temperature(model.provider),
+    }
 
-    # 3. Merge arguments: runtime settings override config file settings
-    merged_kwargs = {**config_kwargs, **runtime_args_dict}
+    # Layer 2: Arguments saved in the model's configuration file
+    saved_config_kwargs = model.settings.get("constructor_args", {})
+
+    # Layer 3: Runtime arguments from the Pydantic model (highest precedence)
+    # Pydantic defaults (max_tokens=4096, max_retries=2) will be included here.
+    runtime_args_dict = runtime_kwargs.model_dump() if runtime_kwargs else {}
+
+
+    # 2. Merge all arguments with a clear precedence
+    final_args = {
+        **provider_defaults, # lowest precedence
+        **saved_config_kwargs,
+        **runtime_args_dict # highest precedence
+    }
+
+    # Add callbacks, which are always included
+    final_args["callbacks"] = get_callback_handlers()
+
+
+    # 3. Instantiate the correct provider client
 
     # --- OpenAI Provider ---
     if model.provider == SupportedAIProviders.openai.value["provider_name"]:
-        base_kwargs = {
-            "api_key": model.provider_args.get("api_key"),
-            "base_url": model.provider_args.get("api_base_url"),
-            "model": model.provider_args["model_name"],
-            "temperature": get_model_temperature(model.provider),
-            "max_tokens": 4096,
-            "callbacks": get_callback_handlers(),
+        constructor_kwargs = {
+            "api_key": final_args.get("api_key"),
+            "base_url": str(final_args.get("base_url")) if final_args.get("base_url") else None,
+            "model": final_args.get("model"),
+            "temperature": final_args.get("temperature"),
+            "max_tokens": final_args.get("max_tokens"),
+            "max_retries": final_args.get("max_retries"),
+            "callbacks": final_args.get("callbacks"),
         }
-        final_kwargs = {**base_kwargs, **merged_kwargs}
-        return ChatOpenAI(**final_kwargs), model.provider_args["model_name"]
+        # Filter out None values to avoid passing them to the constructor
+        final_constructor_kwargs = {k: v for k, v in constructor_kwargs.items() if v is not None}
+        return ChatOpenAI(**final_constructor_kwargs), final_args.get("model")
 
     # --- Azure OpenAI Provider ---
     elif model.provider == SupportedAIProviders.azure_openai.value["provider_name"]:
-        base_kwargs = {
-            "openai_api_key": model.provider_args.get("api_key"),
+        constructor_kwargs = {
+            "openai_api_key": final_args.get("api_key"),
             "openai_api_version": "2023-05-15",
-            "azure_endpoint": model.provider_args.get("api_base_url"),
-            "deployment_name": model.provider_args["model_name"],
-            "temperature": get_model_temperature(model.provider),
-            "callbacks": get_callback_handlers(),
+            "azure_endpoint": str(final_args.get("base_url")) if final_args.get("base_url") else None,
+            "deployment_name": final_args.get("model"),
+            "temperature": final_args.get("temperature"),
+            "max_tokens": final_args.get("max_tokens"),
+            "max_retries": final_args.get("max_retries"),
+            "callbacks": final_args.get("callbacks"),
         }
-        final_kwargs = {**base_kwargs, **merged_kwargs}
-        return AzureChatOpenAI(**final_kwargs), model.provider_args["model_name"]
+        final_constructor_kwargs = {k: v for k, v in constructor_kwargs.items() if v is not None}
+        return AzureChatOpenAI(**final_constructor_kwargs), final_args.get("model")
 
     # --- Google Gemini Provider ---
     elif model.provider == SupportedAIProviders.google_gemini.value["provider_name"]:
-        base_kwargs = {
-            "model": model.provider_args["model_name"],
-            "google_api_key": model.provider_args.get("api_key"),
-            "temperature": get_model_temperature(model.provider),
+        constructor_kwargs = {
+            "google_api_key": final_args.get("api_key"),
+            "model": final_args.get("model"),
+            "temperature": final_args.get("temperature"),
+            "max_tokens": final_args.get("max_tokens"),
+            "callbacks": final_args.get("callbacks"),
             "convert_system_message_to_human": True,
-            "callbacks": get_callback_handlers(),
         }
-        # Gemini does not support reasoning args, so we pass merged_kwargs directly
-        final_kwargs = {**base_kwargs, **merged_kwargs}
-        return ChatGoogleGenerativeAI(**final_kwargs), model.provider_args["model_name"]
+        final_constructor_kwargs = {k: v for k, v in constructor_kwargs.items() if v is not None}
+        return ChatGoogleGenerativeAI(**final_constructor_kwargs), final_args.get("model")
 
     # --- Fallback for unsupported providers ---
     else:
         raise UnsupportedAIProviderException(
             f"Unsupported AI Provider: '{model.provider}'"
         )
+    
