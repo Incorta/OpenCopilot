@@ -46,7 +46,7 @@ class ConstructorArgs(BaseModel):
     base_url: HttpUrl | None = None
     api_key: str | None = None
     model: str | None = None
-    max_retries: int | None = Field(default=2, ge=0, description="Maximum number of retries.") # <-- Added here
+    max_retries: int | None = Field(default=2, ge=0, description="Maximum number of retries.")
     reasoning_effort: ReasoningEffort | None = None
     verbosity: Verbosity | None = None
 
@@ -125,82 +125,83 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
                                                     override any other settings.
     """
     # 1. Prepare configuration layers
-
-    # Layer 1: Provider-specific defaults (lowest precedence)
     provider_defaults = {
         "api_key": model.provider_args.get("api_key"),
         "base_url": model.provider_args.get("api_base_url"),
         "model": model.provider_args.get("model_name"),
         "temperature": get_model_temperature(model.provider),
     }
-
-    # Layer 2: Arguments saved in the model's configuration file
     saved_config_kwargs = model.settings.get("constructor_args", {})
-
-    # Layer 3: Runtime arguments from the Pydantic model (highest precedence)
-    # Pydantic defaults (max_tokens=4096, max_retries=2) will be included here.
     runtime_args_dict = runtime_kwargs.model_dump() if runtime_kwargs else {}
 
+    # Clean all dictionaries to remove None values and convert enums
     clean_provider_defaults = {k: (v.value if isinstance(v, StrEnum) else v) for k, v in provider_defaults.items() if v is not None}
     clean_saved_config = {k: (v.value if isinstance(v, StrEnum) else v) for k, v in saved_config_kwargs.items() if v is not None}
     clean_runtime_args = {k: (v.value if isinstance(v, StrEnum) else v) for k, v in runtime_args_dict.items() if v is not None}
 
     # 2. Merge all arguments with a clear precedence
     final_args = {
-        **clean_provider_defaults, # lowest precedence
+        **clean_provider_defaults,
         **clean_saved_config,
-        **clean_runtime_args, # highest precedence
+        **clean_runtime_args,
         "callbacks": get_callback_handlers()
     }
 
     # 3. Instantiate the correct provider client
+    provider_name = model.provider
+    model_name = final_args.get("model")
 
     # --- OpenAI Provider ---
-    if model.provider == SupportedAIProviders.openai.value["provider_name"]:
-        constructor_kwargs = {
-            "api_key": final_args.get("api_key"),
-            "base_url": str(final_args.get("base_url")) if final_args.get("base_url") else None,
-            "model": final_args.get("model"),
-            "temperature": final_args.get("temperature"),
-            "max_tokens": final_args.get("max_tokens"),
-            "max_retries": final_args.get("max_retries"),
-            "callbacks": final_args.get("callbacks"),
+    if provider_name == SupportedAIProviders.openai.value["provider_name"]:
+        constructor_keys = {
+            "api_key", "base_url", "model", "temperature", "max_tokens",
+            "max_retries", "callbacks", "verbosity", "reasoning_effort"
         }
-        # Filter out None values to avoid passing them to the constructor
-        final_constructor_kwargs = {k: v for k, v in constructor_kwargs.items() if v is not None}
-        return ChatOpenAI(**final_constructor_kwargs), final_args.get("model")
+        constructor_kwargs = {
+            k: v for k, v in final_args.items() if k in constructor_keys
+        }
+        if "base_url" in constructor_kwargs:
+            constructor_kwargs["base_url"] = str(constructor_kwargs["base_url"])
+        return ChatOpenAI(**constructor_kwargs), model_name
 
     # --- Azure OpenAI Provider ---
-    elif model.provider == SupportedAIProviders.azure_openai.value["provider_name"]:
-        constructor_kwargs = {
-            "openai_api_key": final_args.get("api_key"),
-            "openai_api_version": "2023-05-15",
-            "azure_endpoint": str(final_args.get("base_url")) if final_args.get("base_url") else None,
-            "deployment_name": final_args.get("model"),
-            "temperature": final_args.get("temperature"),
-            "max_tokens": final_args.get("max_tokens"),
-            "max_retries": final_args.get("max_retries"),
-            "callbacks": final_args.get("callbacks"),
+    elif provider_name == SupportedAIProviders.azure_openai.value["provider_name"]:
+        key_map = {
+            "api_key": "openai_api_key",
+            "base_url": "azure_endpoint",
+            "model": "deployment_name",
+            "max_tokens": "max_completion_tokens",
         }
-        final_constructor_kwargs = {k: v for k, v in constructor_kwargs.items() if v is not None}
-        return AzureChatOpenAI(**final_constructor_kwargs), final_args.get("model")
+        constructor_keys = {
+            "temperature", "max_retries",
+            "callbacks", "verbosity", "reasoning_effort"
+        }
+        constructor_kwargs = {"openai_api_version": "2023-05-15"}
+        for key, value in final_args.items():
+            if key in constructor_keys:
+                constructor_kwargs[key] = value
+            elif key in key_map:
+                new_key = key_map[key]
+                constructor_kwargs[new_key] = str(value) if key == "base_url" else value
+        return AzureChatOpenAI(**constructor_kwargs), model_name
 
     # --- Google Gemini Provider ---
-    elif model.provider == SupportedAIProviders.google_gemini.value["provider_name"]:
-        constructor_kwargs = {
-            "google_api_key": final_args.get("api_key"),
-            "model": final_args.get("model"),
-            "temperature": final_args.get("temperature"),
-            "max_tokens": final_args.get("max_tokens"),
-            "callbacks": final_args.get("callbacks"),
-            "convert_system_message_to_human": True,
+    elif provider_name == SupportedAIProviders.google_gemini.value["provider_name"]:
+        key_map = {"api_key": "google_api_key"}
+        constructor_keys = {
+            "model", "temperature", "max_tokens",
+            "callbacks", "verbosity", "reasoning_effort"
         }
-        final_constructor_kwargs = {k: v for k, v in constructor_kwargs.items() if v is not None}
-        return ChatGoogleGenerativeAI(**final_constructor_kwargs), final_args.get("model")
+        constructor_kwargs = {"convert_system_message_to_human": True}
+        for key, value in final_args.items():
+            if key in constructor_keys:
+                constructor_kwargs[key] = value
+            elif key in key_map:
+                constructor_kwargs[key_map[key]] = value
+        return ChatGoogleGenerativeAI(**constructor_kwargs), model_name
 
     # --- Fallback for unsupported providers ---
     else:
         raise UnsupportedAIProviderException(
-            f"Unsupported AI Provider: '{model.provider}'"
+            f"Unsupported AI Provider: '{provider_name}'"
         )
-    
