@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import StrEnum
 
 # Session Query
 session_query = "session_query"
@@ -28,6 +28,6 @@ DONE = "DONE"
 TODO = "TODO"
 
 
-class LLMModelPriority(Enum):
+class LLMModelPriority(StrEnum):
     primary_model = "primary"
     secondary_model = "secondary"
