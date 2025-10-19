@@ -1,17 +1,12 @@
-import importlib
 from collections import deque
 
-from opencopilot.configs.env import service_utils_path
 from opencopilot.utils.tokens_counter import count_prompt_tokens
 
 
-service_utils_constant_module = importlib.import_module(service_utils_path + ".constants")
-
-
-def construct_summary_object(user_session):
+def construct_summary_object(user_session, max_history_size):
     session_summary = {}
     try:
-        session_summary = summarize_session_queries(user_session)
+        session_summary = summarize_session_queries(user_session, max_history_size)
         session_summary = {str(i + 1): d for i, d in enumerate(session_summary)}
     except:
         pass
@@ -19,7 +14,7 @@ def construct_summary_object(user_session):
     return session_summary
 
 
-def summarize_session_queries(user_session, max_history_size=token_limit_configs.history_limit):
+def summarize_session_queries(user_session, max_history_size):
     """
     This function generates a summary of a user's session queries using a queue-based approach.
 
