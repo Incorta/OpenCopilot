@@ -42,7 +42,7 @@ class Verbosity(StrEnum):
 class ConstructorArgs(BaseModel):
     """A strict schema for runtime constructor arguments."""
     temperature: float | None = Field(None, ge=0.0, le=2.0, description="The model's temperature.")
-    max_tokens: int | None = Field(default=4096, gt=0, description="The maximum number of tokens to generate.")
+    max_completion_tokens: int | None = Field(default=8192, gt=0, description="The maximum number of tokens to generate.")
     base_url: HttpUrl | None = None
     api_key: str | None = None
     model: str | None = None
@@ -154,7 +154,7 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
     # --- OpenAI Provider ---
     if provider_name == SupportedAIProviders.openai.value["provider_name"]:
         constructor_keys = {
-            "api_key", "base_url", "model", "temperature", "max_tokens",
+            "api_key", "base_url", "model", "temperature", "max_completion_tokens",
             "max_retries", "callbacks", "verbosity", "reasoning_effort"
         }
         constructor_kwargs = {
@@ -170,7 +170,6 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
             "api_key": "openai_api_key",
             "base_url": "azure_endpoint",
             "model": "deployment_name",
-            "max_tokens": "max_completion_tokens",
         }
         constructor_keys = {
             "temperature", "max_retries",
@@ -189,7 +188,7 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
     elif provider_name == SupportedAIProviders.google_gemini.value["provider_name"]:
         key_map = {"api_key": "google_api_key"}
         constructor_keys = {
-            "model", "temperature", "max_tokens",
+            "model", "temperature", "max_completion_tokens",
             "callbacks", "verbosity", "reasoning_effort"
         }
         constructor_kwargs = {"convert_system_message_to_human": True}
