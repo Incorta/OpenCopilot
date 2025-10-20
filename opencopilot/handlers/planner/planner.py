@@ -82,10 +82,10 @@ def construct_level_0_prompt(user_objective, context, session_summary_str, model
     return planner_messages, plan_schema, supported_operators
 
 
-def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response, copilot_configs):
+def plan_level_0(user_objective, user_session, session_query, consumption_tracker, evaluator, evaluate_response, copilot_configs, history_token_limit):
     model = copilot_configs.llm_models[LLMModelPriority.primary_model.value]
 
-    session_summary = construct_summary_object(user_session)
+    session_summary = construct_summary_object(user_session, history_token_limit)
     session_summary_str = json.dumps(session_summary, indent=2) if len(session_summary) > 0 else ""
 
     # Construct planner request
