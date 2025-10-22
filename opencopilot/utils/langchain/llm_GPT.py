@@ -124,13 +124,19 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
         runtime_kwargs (Optional[ConstructorArgs]): Validated runtime arguments that
                                                     override any other settings.
     """
+    # Check for and generate dynamic Vertex token
+    dynamic_api_key = None
+    if model.vertex_authentication and model.vertex_authentication.use_vertex_authentication:
+        dynamic_api_key = model.vertex_authentication.get_vertex_access_token()
+
     # 1. Prepare configuration layers
     provider_defaults = {
-        "api_key": model.provider_args.get("api_key"),
+        "api_key": dynamic_api_key or model.provider_args.get("api_key"),
         "base_url": model.provider_args.get("api_base_url"),
         "model": model.provider_args.get("model_name"),
         "temperature": get_model_temperature(model.provider),
     }
+
     saved_config_kwargs = model.settings.get("constructor_args", {})
     runtime_args_dict = runtime_kwargs.model_dump() if runtime_kwargs else {}
 
