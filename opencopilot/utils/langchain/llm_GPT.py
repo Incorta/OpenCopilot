@@ -1,6 +1,7 @@
 from time import sleep
 from enum import StrEnum
 
+import httpx
 import langchain
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain.callbacks.base import Callbacks
@@ -168,7 +169,7 @@ def get_llm(model, runtime_kwargs: ConstructorArgs | None = None):
         }
         if "base_url" in constructor_kwargs:
             constructor_kwargs["base_url"] = str(constructor_kwargs["base_url"])
-        return ChatOpenAI(**constructor_kwargs), model_name
+        return ChatOpenAI(**constructor_kwargs, http_client=httpx.Client(verify=False)), model_name
 
     # --- Azure OpenAI Provider ---
     elif provider_name == SupportedAIProviders.azure_openai.value["provider_name"]:
